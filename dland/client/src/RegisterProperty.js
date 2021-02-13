@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
-import { RMIUploader } from "react-multiple-image-uploader";
+import validator from 'validator';
+import IPFS from './getIPFS';
+import Modal from 'react-bootstrap/Modal';
 
 export default class RegisterProperty extends Component {
     constructor(props) {
@@ -8,13 +10,26 @@ export default class RegisterProperty extends Component {
         this.state = {
             flatType: "",
             furnishing: "",
-            area: 0,
+            area: "",
             address: "",
             availableFrom: "",
-            rent: 0,
-            deposit: 0,
-            selectedFiles: []
+            rent: "",
+            deposit: "",
+            selectedFiles: [],
+            selectedFilesIPFSPath: [],
+            fileHashString: "",
+            ownerContact: "",
+            ipfsClient: this.props.ipfsClient,
+            contract: this.props.contract,
+            account: this.props.account,
+            showLoadingBackdrop: false,
+            loadingBackdropTitle: "Saving File...",
+            showSuccessBackdrop: false
         }
+    }
+
+    componentDidMount() {
+
     }
 
     onFileSelection = (e) => {
@@ -42,9 +57,95 @@ export default class RegisterProperty extends Component {
         }
     }
 
+    getFlatType = (flatType) => {
+        if (flatType === "1RK") {
+            return 0;
+        }
+        else if (flatType === "1BHK") {
+            return 1;
+        }
+        else if (flatType === "2BHK") {
+            return 2;
+        }
+        else if (flatType === "3BHK") {
+            return 3;
+        }
+    }
+
+    getFurnishing = (furnishing) => {
+        if (furnishing === "None") {
+            return 0;
+        }
+        else if (furnishing === "SemiFurnished") {
+            return 1;
+        }
+        else if (furnishing === "FullyFurnished") {
+            return 2;
+        }
+    }
+
+    validatePhone = (e) => {
+        if (!validator.isMobilePhone(e.target.value)) {
+            e.target.setCustomValidity("Invalid Phone Number");
+        } else {
+            e.target.setCustomValidity("");
+        }
+        this.setState({ ownerContact: e.target.value });
+    }
+
     handleSubmit = (e) => {
         e.preventDefault();
-        console.log(this.state);
+        this.setState({ showLoadingBackdrop: true });
+        this.uploadAllFiles();
+    }
+
+    uploadAllFiles = async () => {
+        const { selectedFiles } = this.state;
+        const allHashPromises = await selectedFiles.map(async (file) => {
+            const val = await this.uploadFileToIPFS(file.buffer);
+            return val;
+        });
+
+        const allHashes = await Promise.all(allHashPromises)
+        this.setState({
+            loadingBackdropTitle: "Processing your transaction",
+            selectedFilesIPFSPath: [...this.state.selectedFilesIPFSPath, allHashes]
+        }, this.saveContract);
+    }
+
+    uploadFileToIPFS = async (file) => {
+        try {
+            let results = await IPFS.add(file.buffer);
+            return results['path'];
+        } catch (error) {
+            console.error(error);
+        }
+    }
+
+    saveContract = async () => {
+        const { account, contract, address, availableFrom, area, flatType, furnishing, deposit, rent, ownerContact, selectedFilesIPFSPath } = this.state;
+        const date = new Date(availableFrom).getTime();
+
+        try {
+            const request = await contract.methods.rentOutproperty(
+                `${address};${ownerContact}`,
+                area, this.getFurnishing(furnishing),
+                date, this.getFlatType(flatType),
+                rent, deposit,
+                selectedFilesIPFSPath.join(";")
+            )
+                .send({ from: account });
+
+            this.setState({
+                showLoadingBackdrop: false,
+                showSuccessBackdrop: true
+            });
+            console.log(request);
+            console.log(this.state);
+
+        } catch (error) {
+            console.error(error);
+        }
     }
 
     render() {
@@ -69,6 +170,7 @@ export default class RegisterProperty extends Component {
                                         <label htmlFor="inputFirstName">Flat Type</label>
                                         <select id="inputBG" className="form-control"
                                             value={this.state.flatType} onChange={(e) => { this.setState({ flatType: e.target.value }) }}
+                                            required
                                         >
                                             <option value="" disabled></option>
                                             <option value="1RK">1 RK</option>
@@ -81,6 +183,7 @@ export default class RegisterProperty extends Component {
                                         <label htmlFor="inputLastName">Furnishing</label>
                                         <select id="inputBG" className="form-control"
                                             value={this.state.furnishing} onChange={(e) => { this.setState({ furnishing: e.target.value }) }}
+                                            required
                                         >
                                             <option value="" disabled></option>
                                             <option value="FullyFurnished">Fully Furnished</option>
@@ -95,12 +198,14 @@ export default class RegisterProperty extends Component {
                                         <label htmlFor="inputUID">Address</label>
                                         <textarea type="text" className="form-control" rows="3" style={{ overflow: 'auto', resize: 'none' }}
                                             value={this.state.address} onChange={(e) => { this.setState({ address: e.target.value }) }}
+                                            required
                                         />
                                     </div>
                                     <div className="col-md-6 mb-3">
                                         <label htmlFor="inputGender">Area</label>
-                                        <input type="number" min="0" className="form-control"
+                                        <input type="number" min="1" className="form-control"
                                             value={this.state.area} onChange={(e) => { this.setState({ area: e.target.value }) }}
+                                            required
                                         />
                                     </div>
                                 </div>
@@ -110,6 +215,15 @@ export default class RegisterProperty extends Component {
                                         <label htmlFor="inputDOB">Available From</label>
                                         <input type="date" className="form-control"
                                             value={this.state.availableFrom} onChange={(e) => { this.setState({ availableFrom: e.target.value }) }}
+                                            required
+                                        />
+                                    </div>
+                                    <div className="col-md-6 mb-3">
+                                        <label htmlFor="inputDOB">Contact</label>
+                                        <input type="text" className="form-control"
+                                            value={this.state.ownerContact}
+                                            onChange={this.validatePhone}
+                                            required
                                         />
                                     </div>
                                 </div>
@@ -124,10 +238,11 @@ export default class RegisterProperty extends Component {
                                         <label htmlFor="inputState">Rent</label>
                                         <div className="input-group mb-2">
                                             <div className="input-group-prepend">
-                                                <div className="input-group-text">Rs.</div>
+                                                <div className="input-group-text">₹</div>
                                             </div>
-                                            <input type="number" min="0" className="form-control"
+                                            <input type="number" min="1" className="form-control"
                                                 value={this.state.rent} onChange={(e) => { this.setState({ rent: e.target.value }) }}
+                                                required
                                             />
                                         </div>
                                     </div>
@@ -135,10 +250,11 @@ export default class RegisterProperty extends Component {
                                         <label htmlFor="inputCity">Security Deposit</label>
                                         <div className="input-group mb-2">
                                             <div className="input-group-prepend">
-                                                <div className="input-group-text">Rs.</div>
+                                                <div className="input-group-text">₹</div>
                                             </div>
-                                            <input type="number" min="0" className="form-control"
+                                            <input type="number" min="1" className="form-control"
                                                 value={this.state.deposit} onChange={(e) => { this.setState({ deposit: e.target.value }) }}
+                                                required
                                             />
                                         </div>
                                     </div>
@@ -160,7 +276,7 @@ export default class RegisterProperty extends Component {
                                         <div className="row">
                                             {
                                                 selectedFiles.map((item, key) => {
-                                                    return <img key={key} src={URL.createObjectURL(item.file)} alt="..." class="img-thumbnail img-thumbnail-custom rounded" />
+                                                    return <img key={key} src={URL.createObjectURL(item.file)} alt="..." className="img-thumbnail img-thumbnail-custom rounded" />
                                                 })
                                             }
                                         </div>
@@ -176,6 +292,50 @@ export default class RegisterProperty extends Component {
                         </div>
                     </div>
                 </div>
+
+                <Modal
+                    show={this.state.showLoadingBackdrop}
+                    backdrop="static"
+                    keyboard={false}
+                    aria-labelledby="contained-modal-title-vcenter"
+                    centered
+                >
+                    <Modal.Header closeButton>
+                        <Modal.Title>{this.state.loadingBackdropTitle}</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="d-flex justify-content-center">
+                            <div className="spinner-grow" role="status">
+                                <span className="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                    </Modal.Body>
+                </Modal>
+
+                <Modal
+                    show={this.state.showLoadingBackdrop}
+                    backdrop="static"
+                    keyboard={false}
+                    aria-labelledby="contained-modal-title-vcenter"
+                    centered
+                >
+                    <Modal.Header closeButton>
+                        <Modal.Title>{this.state.loadingBackdropTitle}</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="d-flex justify-content-center">
+                            <div className="spinner-grow" role="status">
+                                <span className="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                    </Modal.Body>
+                </Modal>
+
+                <Modal show={this.state.showSuccessBackdrop} onHide={() => this.setState({ showSuccessBackdrop: false })}>
+                    <Modal.Header closeButton>
+                        <Modal.Title> Property Added. <i className="bi bi-check2-all"></i> </Modal.Title>
+                    </Modal.Header>
+                </Modal>
             </div>
         )
     }

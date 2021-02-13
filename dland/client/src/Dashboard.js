@@ -1,6 +1,4 @@
 import React, { Component } from 'react';
-import IPFS from 'ipfs-http-client';
-import config from './config.json';
 import Property from './PropertyCard';
 
 export class Dashboard extends Component {
@@ -8,19 +6,27 @@ export class Dashboard extends Component {
         super(props)
 
         this.state = {
-
+            contract: this.props.contract,
+            account: this.props.account,
+            allProperties: []
         }
     }
 
+    getAllProperties = async () => {
+        const { account, contract } = this.state;
+
+        const response = await contract.methods.getProperies(0).call();
+        const data = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
+
+        this.setState({ allProperties: data });
+    };
+
     componentDidMount() {
-        const client = new IPFS({
-            host: config.ipfsEndpoint,
-            port: config.ipfsPort,
-            protocol: config.ipfsSecurityProtocol
-        });
+        this.getAllProperties();
     }
 
     render() {
+        const { allProperties } = this.state;
         return (
             <div className="Dashboard">
                 <div className="jumbotron jumbotron-fluid bg-transparent m-0">
@@ -30,9 +36,14 @@ export class Dashboard extends Component {
                         </header>
                         <div className="container container-fluid p-5">
                             <div className="list-group mx-auto">
-                                <Property />
-                                <Property />
-                                <Property />
+                                {
+                                    // console.log(this.state.allProperties)
+                                    allProperties.length > 0 ?
+                                        allProperties.map((item, key) => {
+                                            return <Property key={key} propertyDetail={item} />
+                                        })
+                                        : null
+                                }
                             </div>
                         </div>
                     </div>

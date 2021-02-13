@@ -118,11 +118,11 @@
 }
 
 .navbar-brand > h2,
-.nav-link > h3 {
+.nav-link > h5 {
   margin-bottom: 0em;
 }
 
 .navbar-brand > h2:hover,
-.nav-link > h3:hover {
+.nav-link > h5:hover {
   color: #485e60;
 }

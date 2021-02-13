@@ -1,7 +1,7 @@
 import React, { Component } from "react";
-import SimpleStorageContract from "./contracts/SimpleStorage.json";
-import RealEstateRentalContract from "./contracts/RealEstateRental.json";
+import PropertyRental from "./contracts/PropertyRental.json";
 import getWeb3 from "./getWeb3";
+import config from './config.json';
 
 import "./App.css";
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -29,6 +29,7 @@ class App extends Component {
 
   componentDidMount = async () => {
     try {
+
       // Get network provider and web3 instance.
       const web3 = await getWeb3();
 
@@ -37,28 +38,22 @@ class App extends Component {
 
       // Get the contract instance.
       const networkId = await web3.eth.net.getId();
-      const deployedNetwork = SimpleStorageContract.networks[networkId];
+
+      const deployedNetwork = PropertyRental.networks[networkId];
       const instance = new web3.eth.Contract(
-        SimpleStorageContract.abi,
+        PropertyRental.abi,
         deployedNetwork && deployedNetwork.address,
       );
-
-      // const deployedNetwork = RealEstateRentalContract.networks[networkId];
-      // const instance = new web3.eth.Contract(
-      //   RealEstateRentalContract.abi,
-      //   deployedNetwork && deployedNetwork.address,
-      // );
-
-      // console.log(instance);
 
       // Set web3, accounts, and contract to the state, and then proceed with an
       // example of interacting with the contract's methods.
       this.setState(
         {
           web3, accounts, contract: instance
-        },
-        // this.runExample
+        }
+        // , this.runExample
       );
+
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -72,14 +67,15 @@ class App extends Component {
     const { accounts, contract } = this.state;
 
     // Stores a given value, 5 by default.
-    await contract.methods.set(5).send({ from: accounts[0] })
-      .on('transactionHash', (hash) => {
-        this.setState({ transactionHash: hash });
-      });
+    // const request = await contract.methods.rentOutproperty(
+    //   '3500 Deer Creek Road Palo Alto, CA 94304;8507783427',
+    //   1234, 1, 1613073764999, 0, 4500, 10000).send({ from: accounts[0] });
+
+    // console.log(request);
 
     // Get the value from the contract to prove it worked.
-    const response = await contract.methods.get().call();
-
+    const response = await contract.methods.getProperies().call();
+    console.log('Response', response);
 
     // Update state with the result.
     this.setState({ storageValue: response });
@@ -93,8 +89,12 @@ class App extends Component {
       <div className="App">
         <Router>
           <Navbar />
-          <Route path="/" exact component={Dashboard} />
-          <Route path="/property" exact component={Register} />
+          <Route path="/" exact render={
+            (props) => <Dashboard {...props} contract={this.state.contract} account={this.state.accounts[0]} />
+          } />
+          <Route path="/property" exact render={
+            (props) => <Register {...props} contract={this.state.contract} account={this.state.accounts[0]} />
+          } />
         </Router>
       </div>
     )

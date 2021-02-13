@@ -15,7 +15,7 @@ export default class Navbar extends Component {
             <nav
                 className="navbar navbar-expand-lg fixed-top navbar-light shadow-lg rounded bg-light"
             >
-                <Link className="navbar-brand navbar-nav" href="/">
+                <Link className="navbar-brand navbar-nav" to="/">
                     <h2>
                         DLAND
                     </h2>
@@ -36,10 +36,10 @@ export default class Navbar extends Component {
                     <ul className="navbar-nav mr-auto"></ul>
                     <ul className="navbar-nav ml-auto">
                         <li className="nav-item active" data-toggle="collapse" data-target=".navbar-collapse.show">
-                            <Link className="nav-link" to="/"><h3>Dashboard</h3></Link>
+                            <Link className="nav-link" to="/"><h5>Dashboard</h5></Link>
                         </li>
                         <li className="nav-item active" data-toggle="collapse" data-target=".navbar-collapse.show">
-                            <Link className="nav-link" to="/property"><h3>Rent Out</h3></Link>
+                            <Link className="nav-link" to="/property"><h5>Rent Out</h5></Link>
                         </li>
                     </ul>
                 </div>
