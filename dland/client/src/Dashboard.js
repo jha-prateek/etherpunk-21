@@ -19,7 +19,7 @@ export class Dashboard extends Component {
         const data = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
 
         this.setState({ allProperties: data });
-    };
+    }
 
     componentDidMount() {
         this.getAllProperties();
@@ -40,7 +40,7 @@ export class Dashboard extends Component {
                                     // console.log(this.state.allProperties)
                                     allProperties.length > 0 ?
                                         allProperties.map((item, key) => {
-                                            return <Property key={key} propertyDetail={item} />
+                                            return <Property key={key} propertyDetail={item} account={this.state.account} contract={this.state.contract} />
                                         })
                                         : null
                                 }

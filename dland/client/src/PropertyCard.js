@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
-
+import Modal from 'react-bootstrap/Modal';
+import Button from 'react-bootstrap/Button';
 
 export default class PropertyCard extends Component {
     constructor(props) {
@@ -12,7 +13,8 @@ export default class PropertyCard extends Component {
         const furnishing = this.props.propertyDetail['furnishing'];
         const rent = this.props.propertyDetail['rent'];
         const securityDeposit = this.props.propertyDetail['securityDeposit'];
-        const imageURL = this.props.propertyDetail['imagesHash'].split(',')[1];
+        const imageURL = this.props.propertyDetail['imagesHash'].split(',')[0];
+        const propertyId = this.props.propertyDetail['propId'];
 
         this.state = {
             area: area,
@@ -23,7 +25,16 @@ export default class PropertyCard extends Component {
             securityDeposit: securityDeposit,
             address: description[0],
             contact: description[1],
-            imageURL: imageURL
+            imageURL: imageURL,
+            propertyId: propertyId,
+            contract: this.props.contract,
+            account: this.props.account,
+            bookProperty: false,
+            showLoadingBackdrop: false,
+            showSuccessBackdrop: false,
+            checkInDate: "",
+            checkOutDate: "",
+            transactionMessage: ""
         }
     }
 
@@ -60,7 +71,35 @@ export default class PropertyCard extends Component {
         }
     }
 
-    componentDidMount() {
+    rentProperty = async () => {
+        const { account, contract, propertyId, checkInDate, checkOutDate } = this.state;
+        if (checkInDate === "" || checkOutDate === "" || checkInDate > checkOutDate) {
+            alert("Check-out date must be after Check-in date");
+            return;
+        }
+
+        this.setState({ bookProperty: false, showLoadingBackdrop: true });
+
+        const checkInDateEpoch = new Date(checkInDate).getTime();
+        const checkOutDateEpoch = new Date(checkOutDate).getTime();
+
+        try {
+            const response = await contract.methods.rentProperty(
+                propertyId, checkInDateEpoch, checkOutDateEpoch
+            )
+                .send({ from: account, value: 0 });
+
+            console.log(response);
+            console.log(this.state);
+            this.setState({ transactionMessage: `Success! \n  TxHash:${response.transactionHash}` });
+        } catch (error) {
+            this.setState({ transactionMessage: `Failed!` });
+            console.error(error);
+        }
+        this.setState({
+            showLoadingBackdrop: false,
+            showSuccessBackdrop: true
+        });
     }
 
     render() {
@@ -69,7 +108,10 @@ export default class PropertyCard extends Component {
                 <div className="card card-product-list bg-light mb-3">
                     <div className="row no-gutters">
                         <div className="col-md-3 p-3 align-middle">
-                            <img src={`https://ipfs.io/ipfs/${this.state.imageURL}`} className="img-thumbnail" alt="..." />
+                            {this.state.imageURL !== "" ?
+                                <img src={`https://ipfs.io/ipfs/${this.state.imageURL}`} className="img-thumbnail" alt="..." />
+                                : <span className="rent h6">No images</span>
+                            }
                         </div>
                         <div className="col-md-6 p-2">
                             <div className="info-main">
@@ -95,7 +137,9 @@ export default class PropertyCard extends Component {
                                 </div>
                                 <br />
                                 <p>
-                                    <a href="#" className="btn btn-primary btn-block"> Details </a>
+                                    <button className="btn btn-primary btn-block"
+                                        onClick={() => this.setState({ bookProperty: true })}
+                                    > Details </button>
                                 </p>
                                 <p>
                                     Available from: <span className="rent h6"> {this.state.availableFrom} </span>
@@ -104,6 +148,75 @@ export default class PropertyCard extends Component {
                         </div>
                     </div>
                 </div>
+                <Modal
+                    show={this.state.bookProperty}
+                    backdrop="static"
+                    keyboard={false}
+                    aria-labelledby="contained-modal-title-vcenter"
+                    centered
+                >
+                    <Modal.Header closeButton>
+                        <Modal.Title>Details</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="form-row">
+                            <div className="col-md-6 mb-3">
+                                <label htmlFor="inputDOB">Check-in Date</label>
+                                <input type="date" className="form-control"
+                                    value={this.state.checkInDate} onChange={(e) => { this.setState({ checkInDate: e.target.value }) }}
+                                    required
+                                />
+                            </div>
+                            <div className="col-md-6 mb-3">
+                                <label htmlFor="inputDOB">Check-out Date</label>
+                                <input type="date" className="form-control"
+                                    value={this.state.checkOutDate} onChange={(e) => { this.setState({ checkOutDate: e.target.value }) }}
+                                    required
+                                />
+                            </div>
+                        </div>
+                    </Modal.Body>
+                    <Modal.Footer>
+                        <Button variant="secondary" onClick={() => this.setState({ bookProperty: false })}>
+                            Close
+                        </Button>
+                        <Button variant="primary" onClick={this.rentProperty}>
+                            Book
+                        </Button>
+                    </Modal.Footer>
+                </Modal>
+
+                <Modal
+                    show={this.state.showLoadingBackdrop}
+                    backdrop="static"
+                    keyboard={false}
+                    aria-labelledby="contained-modal-title-vcenter"
+                    centered
+                >
+                    <Modal.Header closeButton>
+                        <Modal.Title>Booking...</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="d-flex justify-content-center">
+                            <div className="spinner-grow" role="status">
+                                <span className="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                    </Modal.Body>
+                </Modal>
+
+                <Modal
+                    show={this.state.showSuccessBackdrop}
+                    onHide={() => this.setState({ showSuccessBackdrop: false })}
+                    centered
+                >
+                    <Modal.Header closeButton>
+                        <Modal.Title>Message </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {this.state.transactionMessage}
+                    </Modal.Body>
+                </Modal>
             </div>
         )
     }

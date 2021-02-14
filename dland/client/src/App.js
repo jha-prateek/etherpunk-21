@@ -17,6 +17,8 @@ import {
 import Dashboard from './Dashboard';
 import Register from './RegisterProperty'
 import Navbar from "./Navbar";
+import MyBookings from './MyBookings';
+import MyProperties from './MyProperties';
 
 class App extends Component {
   state = {
@@ -94,6 +96,12 @@ class App extends Component {
           } />
           <Route path="/property" exact render={
             (props) => <Register {...props} contract={this.state.contract} account={this.state.accounts[0]} />
+          } />
+          <Route path="/bookings" exact render={
+            (props) => <MyBookings {...props} contract={this.state.contract} account={this.state.accounts[0]} />
+          } />
+          <Route path="/properties" exact render={
+            (props) => <MyProperties {...props} contract={this.state.contract} account={this.state.accounts[0]} />
           } />
         </Router>
       </div>

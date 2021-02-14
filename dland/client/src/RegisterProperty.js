@@ -24,7 +24,8 @@ export default class RegisterProperty extends Component {
             account: this.props.account,
             showLoadingBackdrop: false,
             loadingBackdropTitle: "Saving File...",
-            showSuccessBackdrop: false
+            showSuccessBackdrop: false,
+            transactionMessage: ""
         }
     }
 
@@ -127,7 +128,7 @@ export default class RegisterProperty extends Component {
         const date = new Date(availableFrom).getTime();
 
         try {
-            const request = await contract.methods.rentOutproperty(
+            const response = await contract.methods.rentOutproperty(
                 `${address};${ownerContact}`,
                 area, this.getFurnishing(furnishing),
                 date, this.getFlatType(flatType),
@@ -136,16 +137,17 @@ export default class RegisterProperty extends Component {
             )
                 .send({ from: account });
 
-            this.setState({
-                showLoadingBackdrop: false,
-                showSuccessBackdrop: true
-            });
-            console.log(request);
+            console.log(response);
             console.log(this.state);
-
+            this.setState({ transactionMessage: `Success! \n  TxHash:${response.transactionHash}` });
         } catch (error) {
+            this.setState({ transactionMessage: `Failed!` });
             console.error(error);
         }
+        this.setState({
+            showLoadingBackdrop: false,
+            showSuccessBackdrop: true
+        });
     }
 
     render() {
@@ -240,7 +242,7 @@ export default class RegisterProperty extends Component {
                                             <div className="input-group-prepend">
                                                 <div className="input-group-text">₹</div>
                                             </div>
-                                            <input type="number" min="1" className="form-control"
+                                            <input type="number" min="0" className="form-control"
                                                 value={this.state.rent} onChange={(e) => { this.setState({ rent: e.target.value }) }}
                                                 required
                                             />
@@ -252,7 +254,7 @@ export default class RegisterProperty extends Component {
                                             <div className="input-group-prepend">
                                                 <div className="input-group-text">₹</div>
                                             </div>
-                                            <input type="number" min="1" className="form-control"
+                                            <input type="number" min="0" className="form-control"
                                                 value={this.state.deposit} onChange={(e) => { this.setState({ deposit: e.target.value }) }}
                                                 required
                                             />
@@ -313,28 +315,16 @@ export default class RegisterProperty extends Component {
                 </Modal>
 
                 <Modal
-                    show={this.state.showLoadingBackdrop}
-                    backdrop="static"
-                    keyboard={false}
-                    aria-labelledby="contained-modal-title-vcenter"
+                    show={this.state.showSuccessBackdrop}
+                    onHide={() => this.setState({ showSuccessBackdrop: false })}
                     centered
                 >
                     <Modal.Header closeButton>
-                        <Modal.Title>{this.state.loadingBackdropTitle}</Modal.Title>
+                        <Modal.Title>Message </Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
-                        <div className="d-flex justify-content-center">
-                            <div className="spinner-grow" role="status">
-                                <span className="sr-only">Loading...</span>
-                            </div>
-                        </div>
+                        {this.state.transactionMessage}
                     </Modal.Body>
-                </Modal>
-
-                <Modal show={this.state.showSuccessBackdrop} onHide={() => this.setState({ showSuccessBackdrop: false })}>
-                    <Modal.Header closeButton>
-                        <Modal.Title> Property Added. <i className="bi bi-check2-all"></i> </Modal.Title>
-                    </Modal.Header>
                 </Modal>
             </div>
         )

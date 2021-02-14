@@ -41,6 +41,12 @@ export default class Navbar extends Component {
                         <li className="nav-item active" data-toggle="collapse" data-target=".navbar-collapse.show">
                             <Link className="nav-link" to="/property"><h5>Rent Out</h5></Link>
                         </li>
+                        <li className="nav-item active" data-toggle="collapse" data-target=".navbar-collapse.show">
+                            <Link className="nav-link" to="/bookings"><h5>My Bookings</h5></Link>
+                        </li>
+                        <li className="nav-item active" data-toggle="collapse" data-target=".navbar-collapse.show">
+                            <Link className="nav-link" to="/properties"><h5>My Properties</h5></Link>
+                        </li>
                     </ul>
                 </div>
             </nav>
