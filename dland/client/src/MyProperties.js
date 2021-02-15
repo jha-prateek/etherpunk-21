@@ -15,7 +15,7 @@ export default class MyProperties extends Component {
         console.log(this.state);
         const { account, contract } = this.state;
         try {
-            const response = await contract.methods.getMyProperies(0).call();
+            const response = await contract.methods.getMyProperties(0, account).call();
             // const data = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
             console.log(response);
             // this.setState({ myBookings: data });

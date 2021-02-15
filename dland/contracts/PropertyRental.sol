@@ -151,13 +151,24 @@ contract PropertyRental {
         properties[_propertyId].isActive = false;
     }
 
+    /**
+     * @dev Advertise the property again in the market
+     */
+    function markPropertyAsActive(uint256 _propertyId) public {
+        require(
+            properties[_propertyId].owner == msg.sender,
+            "THIS IS NOT YOUR PROPERTY"
+        );
+        properties[_propertyId].isActive = true;
+    }
+
     //Get total number of proprties
     function getTotalProperties() public view returns (uint256) {
         return propertyId;
     }
 
     //Get 8 available properties from current location
-    function getProperies(uint256 loc)
+    function getProperties(uint256 loc)
         public
         view
         returns (Property[] memory, uint8)
@@ -174,7 +185,7 @@ contract PropertyRental {
     }
 
     //Get listed properties by owner
-    function getMyProperies(uint256 loc)
+    function getMyProperties(uint256 loc, address caller)
         public
         view
         returns (
@@ -187,17 +198,23 @@ contract PropertyRental {
         Booking[] memory bookingBundle = new Booking[](2);
         uint8 j = 0;
         for (uint256 i = loc; j < 2 && i < propertyId; i++) {
-            if (properties[i].owner == msg.sender) {
+            if (properties[i].owner == caller) {
                 Property storage prop = properties[i];
-                propertyBundle[j] = prop;
-                bookingBundle[j++] = bookings[prop.propId];
+                propertyBundle[j++] = prop;
+            }
+        }
+        uint256 k = 0;
+        for (uint256 i = 0; k < 2 && i < bookingId && k < j; i++) {
+            if (bookings[i].propertyId == propertyBundle[k].propId) {
+                Booking storage booked = bookings[i];
+                bookingBundle[k++] = booked;
             }
         }
         return (propertyBundle, bookingBundle, j);
     }
 
     //Get Booked properties by tenant
-    function getMyBookings(uint256 loc)
+    function getMyBookings(uint256 loc, address caller)
         public
         view
         returns (
@@ -210,7 +227,7 @@ contract PropertyRental {
         Booking[] memory bookingBundle = new Booking[](2);
         uint8 j = 0;
         for (uint256 i = loc; j < 2 && i < propertyId; i++) {
-            if (bookings[i].tenant == msg.sender) {
+            if (bookings[i].tenant == caller) {
                 Booking storage booked = bookings[i];
                 bookingBundle[j] = booked;
                 propertyBundle[j++] = properties[booked.propertyId];
