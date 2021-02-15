@@ -15,9 +15,9 @@ export class Dashboard extends Component {
     getAllProperties = async () => {
         const { account, contract } = this.state;
 
-        const response = await contract.methods.getProperies(0).call();
+        const response = await contract.methods.getProperties(0).call();
         const data = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
-
+        console.log(response);
         this.setState({ allProperties: data });
     }
 
