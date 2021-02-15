@@ -13,11 +13,14 @@ export default class MyBookings extends Component {
 
     getMyBookings = async () => {
         const { account, contract } = this.state;
-
-        const response = await contract.methods.getMyBookings(0).call();
-        // const data = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
-        console.log(response);
-        // this.setState({ myBookings: data });
+        try {
+            const response = await contract.methods.getMyBookings(0).call();
+            // const data = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
+            console.log(response);
+            // this.setState({ myBookings: data });
+        } catch (error) {
+            console.error(error);
+        }
     };
 
     componentDidMount() {

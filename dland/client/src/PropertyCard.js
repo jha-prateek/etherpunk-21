@@ -36,6 +36,8 @@ export default class PropertyCard extends Component {
             checkOutDate: "",
             transactionMessage: ""
         }
+
+        // console.log(propertyId, this.props.contract, this.props.account);
     }
 
     getDateFromEpoch = (epoch) => {
@@ -72,16 +74,21 @@ export default class PropertyCard extends Component {
     }
 
     rentProperty = async () => {
-        const { account, contract, propertyId, checkInDate, checkOutDate } = this.state;
+        const { account, contract, propertyId, checkInDate, checkOutDate, availableFrom } = this.state;
         if (checkInDate === "" || checkOutDate === "" || checkInDate > checkOutDate) {
             alert("Check-out date must be after Check-in date");
             return;
         }
 
-        this.setState({ bookProperty: false, showLoadingBackdrop: true });
-
         const checkInDateEpoch = new Date(checkInDate).getTime();
         const checkOutDateEpoch = new Date(checkOutDate).getTime();
+
+        if (checkInDate < availableFrom - 1) {
+            alert("Check-in date must be after Available date");
+            return;
+        }
+
+        this.setState({ bookProperty: false, showLoadingBackdrop: true });
 
         try {
             const response = await contract.methods.rentProperty(
