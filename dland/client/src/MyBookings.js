@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Booking from './BookingCard';
 
 export default class MyBookings extends Component {
     constructor(props) {
@@ -15,9 +16,12 @@ export default class MyBookings extends Component {
         const { account, contract } = this.state;
         try {
             const response = await contract.methods.getMyBookings(0, account).call();
-            // const data = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
-            console.log(response);
-            // this.setState({ myBookings: data });
+            const properties = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
+            const bookings = response[1].filter(item => item.tenant !== "0x0000000000000000000000000000000000000000");
+            const mergedResult = [properties, bookings].reduce((a, b) => a.map((c, i) => Object.assign({}, c, b[i])));
+            // console.log(properties, bookings);
+            // console.log(mergedResult);
+            this.setState({ myBookings: mergedResult });
         } catch (error) {
             console.error(error);
         }
@@ -28,24 +32,22 @@ export default class MyBookings extends Component {
     }
 
     render() {
+        const { myBookings } = this.state;
         return (
-            <div className="MyBookings">
+            <div className="my-bookings">
                 <div className="jumbotron jumbotron-fluid bg-transparent m-0">
                     <div className="container container-fluid p-5">
                         <header className="section-heading">
                             <h1 className="section-title text-center">My Bookings</h1>
                         </header>
                         <div className="container container-fluid p-5">
-                            <div className="list-group mx-auto">
-                                {
-                                    console.log(this.state.allProperties)
-                                    // allProperties.length > 0 ?
-                                    //     allProperties.map((item, key) => {
-                                    //         return <Property key={key} propertyDetail={item} />
-                                    //     })
-                                    //     : null
-                                }
-                            </div>
+                            {
+                                myBookings.length > 0 ?
+                                    myBookings.map((item, key) => {
+                                        return <Booking key={key} propertyDetail={item} />
+                                    })
+                                    : null
+                            }
                         </div>
                     </div>
                 </div>

@@ -126,3 +126,7 @@
 .nav-link > h5:hover {
   color: #485e60;
 }
+
+.modal-body {
+  word-wrap: break-word;
+}

@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import Property from './PropertyCard';
 
 export default class MyProperties extends Component {
     constructor(props) {
@@ -7,18 +8,20 @@ export default class MyProperties extends Component {
         this.state = {
             contract: this.props.contract,
             account: this.props.account,
-            myBookings: []
+            myProperties: []
         }
     }
 
     getMyProperies = async () => {
-        console.log(this.state);
+
         const { account, contract } = this.state;
         try {
             const response = await contract.methods.getMyProperties(0, account).call();
-            // const data = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
-            console.log(response);
-            // this.setState({ myBookings: data });
+            const properties = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
+            const bookings = response[1].filter(item => item.tenant !== "0x0000000000000000000000000000000000000000");
+            const mergedResult = [properties, bookings].reduce((a, b) => a.map((c, i) => Object.assign({}, c, b[i])));
+            console.log(mergedResult);
+            this.setState({ myProperties: mergedResult });
 
         } catch (error) {
             console.error(error);
@@ -30,9 +33,27 @@ export default class MyProperties extends Component {
     }
 
     render() {
+        const { myProperties } = this.state;
         return (
-            <div>
-
+            <div className="my-properties">
+                <div className="jumbotron jumbotron-fluid bg-transparent m-0">
+                    <div className="container container-fluid p-5">
+                        <header className="section-heading">
+                            <h1 className="section-title text-center">My Properties</h1>
+                        </header>
+                        <div className="container container-fluid p-5">
+                            <div className="row">
+                                {
+                                    myProperties.length > 0 ?
+                                        myProperties.map((item, key) => {
+                                            return <Property key={key} propertyDetail={item} />
+                                        })
+                                        : null
+                                }
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         )
     }

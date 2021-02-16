@@ -133,7 +133,7 @@ export default class RegisterProperty extends Component {
                 area, this.getFurnishing(furnishing),
                 date, this.getFlatType(flatType),
                 rent, deposit,
-                selectedFilesIPFSPath.join(";")
+                selectedFilesIPFSPath.join(",")
             )
                 .send({ from: account });
 

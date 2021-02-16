@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import Property from './PropertyCard';
+import Property from './DashboardCard';
 
 export class Dashboard extends Component {
     constructor(props) {
@@ -17,7 +17,7 @@ export class Dashboard extends Component {
 
         const response = await contract.methods.getProperties(0).call();
         const data = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
-        console.log(response);
+        // console.log(response);
         this.setState({ allProperties: data });
     }
 
