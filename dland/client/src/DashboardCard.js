@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import { getFurnishing, getDateFromEpoch, getFlatType } from './Utils';
+import getWeb3 from "./getWeb3";
 
 export default class DashboardCard extends Component {
     constructor(props) {
@@ -34,7 +35,7 @@ export default class DashboardCard extends Component {
             showSuccessBackdrop: false,
             checkInDate: "",
             checkOutDate: "",
-            transactionMessage: ""
+            transactionMessage: "",
         }
 
         // console.log(propertyId, this.props.contract, this.props.account);
@@ -80,6 +81,7 @@ export default class DashboardCard extends Component {
             return;
         }
 
+        const { web3 } = this.props;
         const checkInDateEpoch = new Date(checkInDate).getTime();
         const checkOutDateEpoch = new Date(checkOutDate).getTime();
 
@@ -91,10 +93,23 @@ export default class DashboardCard extends Component {
         this.setState({ bookProperty: false, showLoadingBackdrop: true });
 
         try {
+            // contract.methods.rentProperty.estimateGas({ from: account })
+            //     .then(function (gasAmount) {
+            //         console.log(`Estimation: ${gasAmount}`);
+            //     })
+            //     .catch(function (error) {
+            //         console.error(error);
+            //     });
+
             const response = await contract.methods.rentProperty(
                 propertyId, checkInDateEpoch, checkOutDateEpoch
             )
-                .send({ from: account, value: 0 });
+                .send({
+                    from: account,
+                    gasPrice: web3.utils.toWei("3", 'gwei'),
+                    gas: 106427,
+                    value: web3.utils.toWei("0.01", 'ether')
+                });
 
             console.log(response);
             console.log(this.state);
@@ -138,9 +153,9 @@ export default class DashboardCard extends Component {
                         <div className="col-sm-3 p-2">
                             <div className="info-aside">
                                 <div className="price-wrap">
-                                    <span className="rent h5 text-end">Rent: ₹ {this.state.rent} </span>
+                                    <span className="rent h5 text-end">Rent: $ {this.state.rent} </span>
                                     <br />
-                                    <span className="rent h5">Security: ₹ {this.state.securityDeposit} </span>
+                                    <span className="rent h5">Security: $ {this.state.securityDeposit} </span>
                                 </div>
                                 <br />
                                 <p>

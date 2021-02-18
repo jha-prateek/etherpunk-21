@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Link } from "react-router-dom";
+import logo from './dstays2.png';
 
 export default class Navbar extends Component {
     constructor(props) {
@@ -13,12 +14,10 @@ export default class Navbar extends Component {
     render() {
         return (
             <nav
-                className="navbar navbar-expand-lg fixed-top navbar-light shadow-lg rounded bg-light"
+                className="navbar navbar-expand-lg fixed-top navbar-dark shadow-lg"
             >
                 <Link className="navbar-brand navbar-nav" to="/">
-                    <h2>
-                        DLAND
-                    </h2>
+                    <img src={logo} />
                 </Link>
                 <button
                     className="navbar-toggler"

@@ -240,7 +240,7 @@ export default class RegisterProperty extends Component {
                                         <label htmlFor="inputState">Rent</label>
                                         <div className="input-group mb-2">
                                             <div className="input-group-prepend">
-                                                <div className="input-group-text">₹</div>
+                                                <div className="input-group-text">$</div>
                                             </div>
                                             <input type="number" min="0" className="form-control"
                                                 value={this.state.rent} onChange={(e) => { this.setState({ rent: e.target.value }) }}
@@ -252,7 +252,7 @@ export default class RegisterProperty extends Component {
                                         <label htmlFor="inputCity">Security Deposit</label>
                                         <div className="input-group mb-2">
                                             <div className="input-group-prepend">
-                                                <div className="input-group-text">₹</div>
+                                                <div className="input-group-text">$</div>
                                             </div>
                                             <input type="number" min="0" className="form-control"
                                                 value={this.state.deposit} onChange={(e) => { this.setState({ deposit: e.target.value }) }}

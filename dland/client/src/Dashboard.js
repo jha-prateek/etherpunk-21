@@ -40,7 +40,7 @@ export class Dashboard extends Component {
                                     // console.log(this.state.allProperties)
                                     allProperties.length > 0 ?
                                         allProperties.map((item, key) => {
-                                            return <Property key={key} propertyDetail={item} account={this.state.account} contract={this.state.contract} />
+                                            return <Property key={key} propertyDetail={item} account={this.state.account} contract={this.state.contract} web3={this.props.web3} />
                                         })
                                         : null
                                 }
