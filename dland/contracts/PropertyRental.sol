@@ -2,7 +2,13 @@
 pragma solidity >=0.4.21 <=0.7.4;
 pragma experimental ABIEncoderV2;
 
+import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
+
 contract PropertyRental {
+  AggregatorV3Interface internal priceFeed;
+  constructor() public  {
+  priceFeed = AggregatorV3Interface(0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada);
+  }
     // Property to be rented out on Property
     struct Property {
         uint256 propId;
@@ -134,10 +140,12 @@ contract PropertyRental {
         emit NewBooking(_propertyId, bookingId++);
     }
 
-    function _sendFunds(address beneficiary, uint256 value) internal {
+    function _sendFunds(address _beneficiary, uint256 _value) internal {
         // address(uint160()) is a weird solidity quirk
         // Read more here: https://solidity.readthedocs.io/en/v0.5.10/050-breaking-changes.html?highlight=address%20payable#explicitness-requirements
-        address(uint160(beneficiary)).transfer(value);
+        //address(uint160(beneficiary)).transfer(value);
+        (bool sent, ) = address(uint160(_beneficiary)).call{value: _value}("");
+        require(sent, "Failed to transfer deposit!");
     }
 
     /**
@@ -234,5 +242,17 @@ contract PropertyRental {
             }
         }
         return (propertyBundle, bookingBundle, j);
+    }
+    function getLatestPrice() public view returns (int) {
+        (
+            uint80 roundID, 
+            int price,
+            uint startedAt,
+            uint timeStamp,
+            uint80 answeredInRound
+        ) = priceFeed.latestRoundData();
+        // If the round is not complete yet, timestamp is 0
+        require(timeStamp > 0, "Round not complete");
+        return price;
     }
 }

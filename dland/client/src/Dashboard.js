@@ -18,6 +18,8 @@ export class Dashboard extends Component {
         const response = await contract.methods.getProperties(0).call();
         const data = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
         // console.log(response);
+        const response1 = await contract.methods.getLatestPrice().call();
+        console.log("$" + response1/10**8);
         this.setState({ allProperties: data });
     }
 
