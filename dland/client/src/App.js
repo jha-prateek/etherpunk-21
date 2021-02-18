@@ -92,7 +92,7 @@ class App extends Component {
         <Router>
           <Navbar />
           <Route path="/" exact render={
-            (props) => <Dashboard {...props} contract={this.state.contract} account={this.state.accounts[0]} />
+            (props) => <Dashboard {...props} contract={this.state.contract} account={this.state.accounts[0]} web3={this.state.web3} />
           } />
           <Route path="/property" exact render={
             (props) => <Register {...props} contract={this.state.contract} account={this.state.accounts[0]} />

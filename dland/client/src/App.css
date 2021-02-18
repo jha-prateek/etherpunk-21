@@ -112,6 +112,10 @@
   width: 25%;
 }
 
+.navbar {
+  background-color: #181818;
+}
+
 .navbar-nav > li {
   margin-left: 10px;
   margin-right: 10px;
@@ -125,6 +129,14 @@
 .navbar-brand > h2:hover,
 .nav-link > h5:hover {
   color: #485e60;
+}
+
+.navbar-brand {
+  padding: 0px;
+}
+
+.navbar-brand > img {
+  width: 55%;
 }
 
 .modal-body {
