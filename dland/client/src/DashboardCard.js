@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import { getFurnishing, getDateFromEpoch, getFlatType } from './Utils';
-import getWeb3 from "./getWeb3";
+import { SuperfluidSDK } from "@superfluid-finance/js-sdk";
 
 export default class DashboardCard extends Component {
     constructor(props) {
@@ -41,41 +41,58 @@ export default class DashboardCard extends Component {
         // console.log(propertyId, this.props.contract, this.props.account);
     }
 
-    getDateFromEpoch = (epoch) => {
-        const newDate = new Date(0);
-        newDate.setUTCMilliseconds(epoch);
-        return newDate.toDateString();
-    }
+    initiateSuperfluid = async () => {
+        const { account, rent } = this.state;
+        const { owner } = this.props.propertyDetail;
 
-    getFlatType = (flatType) => {
-        if (flatType === "0") {
-            return "1RK";
-        }
-        else if (flatType === "1") {
-            return "1BHK";
-        }
-        else if (flatType === "2") {
-            return "2BHK";
-        }
-        else {
-            return "3BHK";
-        }
-    }
+        const fDAIxTokenAddress_Rinkeby = '0x745861AeD1EEe363b4AaA5F1994Be40b1e05Ff90';
+        try {
+            const DAIPerSecond = await this.convertDollarToDAI(rent);
 
-    getFurnishing = (furnishing) => {
-        if (furnishing === "0") {
-            return "Un-furnished";
-        }
-        else if (furnishing === "1") {
-            return "Semi-furnished";
-        }
-        else {
-            return "Full-furnished";
+            const sf = new SuperfluidSDK.Framework({
+                web3: this.props.web3
+            });
+            await sf.initialize();
+
+            await sf.cfa.createFlow({
+                superToken: fDAIxTokenAddress_Rinkeby,
+                sender: account,
+                receiver: owner,
+                flowRate: DAIPerSecond.toString()
+            });
+
+
+            await sf.cfa.deleteFlow({
+                superToken: fDAIxTokenAddress_Rinkeby,
+                sender: account,
+                receiver: owner,
+                by: account
+            });
+
+            // const renter = sf.user({
+            //     address: account,
+            //     token: DAITokenAddress_Rinkeby
+            // });
+
+            // await renter.flow({
+            //     recipient: owner,
+            //     flowRate: DAIPerSecond
+            // });
+
+            // const details = await renter.details();
+            // console.log(details);
+
+            const flowDeductions = (await sf.cfa.getNetFlow({ superToken: fDAIxTokenAddress_Rinkeby, account: account })).toString();
+            console.log(flowDeductions);
+
+
+        } catch (error) {
+
         }
     }
 
     rentProperty = async () => {
-        const { account, contract, propertyId, checkInDate, checkOutDate, availableFrom } = this.state;
+        const { account, contract, propertyId, checkInDate, checkOutDate, availableFrom, securityDeposit } = this.state;
         if (checkInDate === "" || checkOutDate === "" || checkInDate > checkOutDate) {
             alert("Check-out date must be after Check-in date");
             return;
@@ -101,6 +118,14 @@ export default class DashboardCard extends Component {
             //         console.error(error);
             //     });
 
+            // Chainlink call for converting Dollat to Matic using priceFeed
+            const responseMATIC = await contract.methods.getLatestPriceMATIC().call();
+            const dollarToMatic = responseMATIC / 10 ** 8;
+            const totalSecurityMatic = (securityDeposit / dollarToMatic) * 10 ** 18;
+
+            // console.log("Matic " + totalSecurityMatic);
+
+            // Sending security amount to owner
             const response = await contract.methods.rentProperty(
                 propertyId, checkInDateEpoch, checkOutDateEpoch
             )
@@ -108,8 +133,9 @@ export default class DashboardCard extends Component {
                     from: account,
                     gasPrice: web3.utils.toWei("3", 'gwei'),
                     gas: 106427,
-                    value: web3.utils.toWei("0.01", 'ether')
-                });
+                    value: web3.utils.toWei(totalSecurityMatic.toString(), 'wei')
+                })
+                .on("confirmation", this.initiateSuperfluid);
 
             console.log(response);
             console.log(this.state);
@@ -122,6 +148,18 @@ export default class DashboardCard extends Component {
             showLoadingBackdrop: false,
             showSuccessBackdrop: true
         });
+    }
+
+    convertDollarToDAI = async (dollarAmt) => {
+        const { contract } = this.state;
+        const responseDAI = await contract.methods.getLatestPriceDAI().call();
+        const dollarToDAI = responseDAI / 10 ** 8;
+        const DAI = dollarAmt / dollarToDAI;
+        return DAI * 10 ** 18 / (3600 * 24 * 30);
+    }
+
+    componentDidMount() {
+        // this.initiateSuperfluid();
     }
 
     render() {

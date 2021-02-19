@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { getFurnishing, getDateFromEpoch, getFlatType } from './Utils';
+import { SuperfluidSDK } from "@superfluid-finance/js-sdk";
 
 export default class BookingCard extends Component {
     constructor(props) {
@@ -17,6 +18,29 @@ export default class BookingCard extends Component {
             startDate: getDateFromEpoch(property.checkInDate),
             endDate: getDateFromEpoch(property.checkoutDate),
             property: property
+        }
+    }
+
+    cancelFLow = async () => {
+        const { account, property } = this.state;
+
+        const fDAIxTokenAddress_Rinkeby = '0x745861AeD1EEe363b4AaA5F1994Be40b1e05Ff90';
+        try {
+
+            const sf = new SuperfluidSDK.Framework({
+                web3: this.props.web3
+            });
+            await sf.initialize();
+
+            await sf.cfa.deleteFlow({
+                superToken: fDAIxTokenAddress_Rinkeby,
+                sender: account,
+                receiver: property.owner,
+                by: account
+            });
+
+        } catch (error) {
+
         }
     }
 
@@ -49,6 +73,7 @@ export default class BookingCard extends Component {
                             </dl>
                         </div>
                     </div>
+                    <button onClick={this.cancelFLow} className="btn btn-primary btn-block">Cancel Flow</button>
                 </div>
             </div>
         )

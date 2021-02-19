@@ -2,6 +2,7 @@ const path = require("path");
 const HDWalletProvider = require('truffle-hdwallet-provider');
 const fs = require('fs');
 const mnemonic = fs.readFileSync(".secret").toString().trim();
+const config = require('./config.json');
 
 module.exports = {
   // See <http://truffleframework.com/docs/advanced/configuration>
@@ -17,6 +18,14 @@ module.exports = {
       confirmations: 2,
       timeoutBlocks: 200,
       skipDryRun: true
+    },
+    goerli: {
+      provider: () => new HDWalletProvider(mnemonic, config.GOERLI_PROVIDER_URL),
+      network_id: 5,
+    },
+    rinkeby: {
+      provider: () => new HDWalletProvider(mnemonic, config.RINKEBY_PROVIDER_URL),
+      network_id: 4,
     },
   },
   // Configure your compilers

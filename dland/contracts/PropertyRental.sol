@@ -5,10 +5,26 @@ pragma experimental ABIEncoderV2;
 import "@chainlink/contracts/src/v0.6/interfaces/AggregatorV3Interface.sol";
 
 contract PropertyRental {
-  AggregatorV3Interface internal priceFeed;
-  constructor() public  {
-  priceFeed = AggregatorV3Interface(0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada);
-  }
+    // AggregatorV3Interface internal priceFeedMATICUSD;
+    AggregatorV3Interface internal priceFeedETHUSD;
+    AggregatorV3Interface internal priceFeedDAIUSD;
+
+    constructor() public {
+        // priceFeedMATICUSD = AggregatorV3Interface(
+        //     0xd0D5e3DB44DE05E9F294BB0a3bEEaF030DE24Ada
+        // );
+        // priceFeedDAIUSD = AggregatorV3Interface(
+        //     0x0FCAa9c899EC5A91eBc3D5Dd869De833b06fB046
+        // );
+
+        priceFeedETHUSD = AggregatorV3Interface(
+            0x8A753747A1Fa494EC906cE90E9f37563A8AF630e
+        );
+        priceFeedDAIUSD = AggregatorV3Interface(
+            0x2bA49Aaa16E6afD2a993473cfB70Fa8559B523cF
+        );
+    }
+
     // Property to be rented out on Property
     struct Property {
         uint256 propId;
@@ -243,14 +259,29 @@ contract PropertyRental {
         }
         return (propertyBundle, bookingBundle, j);
     }
-    function getLatestPrice() public view returns (int) {
+
+    // It's ETHER not MATIC
+    function getLatestPriceMATIC() public view returns (int256) {
         (
-            uint80 roundID, 
-            int price,
-            uint startedAt,
-            uint timeStamp,
+            uint80 roundID,
+            int256 price,
+            uint256 startedAt,
+            uint256 timeStamp,
             uint80 answeredInRound
-        ) = priceFeed.latestRoundData();
+        ) = priceFeedETHUSD.latestRoundData();
+        // If the round is not complete yet, timestamp is 0
+        require(timeStamp > 0, "Round not complete");
+        return price;
+    }
+
+    function getLatestPriceDAI() public view returns (int256) {
+        (
+            uint80 roundID,
+            int256 price,
+            uint256 startedAt,
+            uint256 timeStamp,
+            uint80 answeredInRound
+        ) = priceFeedDAIUSD.latestRoundData();
         // If the round is not complete yet, timestamp is 0
         require(timeStamp > 0, "Round not complete");
         return price;
