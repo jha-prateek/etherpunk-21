@@ -123,7 +123,7 @@ export default class DashboardCard extends Component {
             const dollarToMatic = responseMATIC / 10 ** 8;
             const totalSecurityMatic = (securityDeposit / dollarToMatic) * 10 ** 18;
 
-            // console.log("Matic " + totalSecurityMatic);
+            console.log("Matic " + totalSecurityMatic);
 
             // Sending security amount to owner
             const response = await contract.methods.rentProperty(
@@ -132,7 +132,7 @@ export default class DashboardCard extends Component {
                 .send({
                     from: account,
                     gasPrice: web3.utils.toWei("3", 'gwei'),
-                    gas: 106427,
+                    gas: 210000,
                     value: web3.utils.toWei(totalSecurityMatic.toString(), 'wei')
                 })
                 .on("confirmation", this.initiateSuperfluid);

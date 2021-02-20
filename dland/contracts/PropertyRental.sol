@@ -57,7 +57,7 @@ contract PropertyRental {
 
     // mapping of bookingId to Booking object
     mapping(uint256 => Booking) public bookings;
-
+    mapping(bookingId => uint256) depositedSecurity;
     // This event is emitted when a new property is put up for rent
     event NewProperty(uint256 indexed propertyId);
 
@@ -121,10 +121,10 @@ contract PropertyRental {
             property.isBooked == false,
             "property with this ID is not available"
         );
-
+        uint256 ethDeposit = convertUSDToEth(property.securityDeposit);
         // Check the customer has sent an amount equal to (rentPerDay * numberOfDays)
-        require(msg.value == property.rent, "Sent insufficient funds");
-
+        require(msg.value >= ethDeposit, "Sent insufficient funds");
+        depositedSecurity[bookingId] = msg.value;
         // send funds to the owner of the property
         _sendFunds(property.owner, msg.value);
 
@@ -285,5 +285,12 @@ contract PropertyRental {
         // If the round is not complete yet, timestamp is 0
         require(timeStamp > 0, "Round not complete");
         return price;
+    }
+     function convertUSDToEth(uint256 _value) public view returns (uint256) {
+        int256 ethUsdPrice = getLatestPriceMATIC();
+        return (_value*10 ** 26) /uint256(ethUsdPrice);
+    }
+    function getDepositedETH(uint256 _bookedId) public view returns (uint256){
+        return depositedSecurity[_bookedId];
     }
 }
