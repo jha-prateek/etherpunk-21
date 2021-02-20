@@ -57,7 +57,8 @@ contract PropertyRental {
 
     // mapping of bookingId to Booking object
     mapping(uint256 => Booking) public bookings;
-    mapping(uint256 => uint256) depositedSecurity;
+    mapping(uint256 => uint256) propertyToBooking;
+    
     // This event is emitted when a new property is put up for rent
     event NewProperty(uint256 indexed propertyId);
 
@@ -124,7 +125,7 @@ contract PropertyRental {
         uint256 ethDeposit = convertUSDToEth(property.securityDeposit);
         // Check the customer has sent an amount equal to (rentPerDay * numberOfDays)
         require(msg.value >= ethDeposit, "Sent insufficient funds");
-        depositedSecurity[bookingId] = msg.value;
+
         // send funds to the owner of the property
         _sendFunds(property.owner, msg.value);
 
@@ -151,6 +152,7 @@ contract PropertyRental {
         // Mark the property booked
         property.isBooked = true;
         property.isActive = false;
+        propertyToBooking[_propertyId] = bookingId;
 
         // Emit an event to notify clients
         emit NewBooking(_propertyId, bookingId++);
@@ -221,19 +223,23 @@ contract PropertyRental {
         Property[] memory propertyBundle = new Property[](2);
         Booking[] memory bookingBundle = new Booking[](2);
         uint8 j = 0;
+        uint256 k = 0;
         for (uint256 i = loc; j < 2 && i < propertyId; i++) {
             if (properties[i].owner == caller) {
                 Property storage prop = properties[i];
-                propertyBundle[j++] = prop;
+                propertyBundle[j] = prop;
+                k = propertyToBooking[prop.propId];
+                bookingBundle[j++] = bookings[k];
             }
         }
-        uint256 k = 0;
-        for (uint256 i = 0; k < 2 && i < bookingId && k < j; i++) {
-            if (bookings[i].propertyId == propertyBundle[k].propId) {
-                Booking storage booked = bookings[i];
-                bookingBundle[k++] = booked;
-            }
-        }
+
+        // uint256 k = 0;
+        // for (uint256 i = 0; k < 2 && i < bookingId && k < j; i++) {
+        //     if (bookings[i].propertyId == propertyBundle[k].propId) {
+        //         Booking storage booked = bookings[i];
+        //         bookingBundle[k++] = booked;
+        //     }
+        // }
         return (propertyBundle, bookingBundle, j);
     }
 
@@ -286,11 +292,47 @@ contract PropertyRental {
         require(timeStamp > 0, "Round not complete");
         return price;
     }
-     function convertUSDToEth(uint256 _value) public view returns (uint256) {
+
+    // Function to convert amounts in USD to ETH
+    function convertUSDToEth(uint256 _value) public view returns (uint256) {
         int256 ethUsdPrice = getLatestPriceMATIC();
         return (_value*10 ** 26) /uint256(ethUsdPrice);
     }
-    function getDepositedETH(uint256 _bookedId) public view returns (uint256){
-        return depositedSecurity[_bookedId];
+
+    // function getDepositedETH(uint256 _bookedId) public view returns (uint256){
+    //     return depositedSecurity[_bookedId];
+    // }
+
+    // to cancel a booking and initiate security refund
+    function cancelBooking(uint256 _booking) public payable{
+        Booking memory booked = bookings[_booking];
+        Property memory prop = properties[booked.propertyId];
+
+        //Validate only property owner can cancel booking
+        require(prop.owner == msg.sender,"THIS IS NOT YOUR PROPERTY");
+        require(prop.isBooked, "The property is not booked");
+
+        uint256 ethDeposit = convertUSDToEth(prop.securityDeposit);
+        // Check the customer has sent an amount equal to security deposit
+        require(msg.value >= ethDeposit, "Sent insufficient funds");
+
+        // send funds to the owner of the property
+        _sendFunds(booked.tenant, msg.value);
+
+        //conditions for cancellation are satisfied so deleting booking
+        _cancelBooking(_booking);
+    }
+
+    function _cancelBooking(uint256 _booking) internal{
+        Booking memory booked = bookings[_booking];
+        Property memory prop = properties[booked.propertyId];
+        //mark booking cancelled
+        prop.isActive = true;
+        prop.isBooked = false;
+        booked.checkInDate = 0;
+        booked.checkoutDate = 0;
+        booked.tenant = address(0);
+        booked.propertyId = 0;
+        propertyToBooking[prop.propId] = 0;
     }
 }
