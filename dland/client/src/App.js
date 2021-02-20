@@ -98,7 +98,7 @@ class App extends Component {
             (props) => <Register {...props} contract={this.state.contract} account={this.state.accounts[0]} />
           } />
           <Route path="/bookings" exact render={
-            (props) => <MyBookings {...props} contract={this.state.contract} account={this.state.accounts[0]} />
+            (props) => <MyBookings {...props} contract={this.state.contract} account={this.state.accounts[0]} web3={this.state.web3} />
           } />
           <Route path="/properties" exact render={
             (props) => <MyProperties {...props} contract={this.state.contract} account={this.state.accounts[0]} />

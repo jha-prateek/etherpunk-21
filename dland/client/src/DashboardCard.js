@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
 import { getFurnishing, getDateFromEpoch, getFlatType } from './Utils';
-import { SuperfluidSDK } from "@superfluid-finance/js-sdk";
+const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 
 export default class DashboardCard extends Component {
     constructor(props) {
@@ -58,37 +58,30 @@ export default class DashboardCard extends Component {
                 superToken: fDAIxTokenAddress_Rinkeby,
                 sender: account,
                 receiver: owner,
-                flowRate: DAIPerSecond.toString()
+                flowRate: Math.round(DAIPerSecond)
             });
 
+            console.log(sf);
 
-            await sf.cfa.deleteFlow({
-                superToken: fDAIxTokenAddress_Rinkeby,
-                sender: account,
-                receiver: owner,
-                by: account
-            });
+            this.setState({ transactionMessage: `${this.state.transactionMessage} \n Your superfluid flow has started. Check https://superfluid.finance/` });
 
-            // const renter = sf.user({
-            //     address: account,
-            //     token: DAITokenAddress_Rinkeby
+            // await sf.cfa.deleteFlow({
+            //     superToken: fDAIxTokenAddress_Rinkeby,
+            //     sender: account,
+            //     receiver: owner,
+            //     by: account
             // });
-
-            // await renter.flow({
-            //     recipient: owner,
-            //     flowRate: DAIPerSecond
-            // });
-
-            // const details = await renter.details();
-            // console.log(details);
 
             const flowDeductions = (await sf.cfa.getNetFlow({ superToken: fDAIxTokenAddress_Rinkeby, account: account })).toString();
             console.log(flowDeductions);
 
-
         } catch (error) {
-
+            console.error(error);
         }
+        this.setState({
+            showLoadingBackdrop: false,
+            showSuccessBackdrop: true
+        });
     }
 
     rentProperty = async () => {
@@ -120,8 +113,8 @@ export default class DashboardCard extends Component {
 
             // Chainlink call for converting Dollat to Matic using priceFeed
             const responseMATIC = await contract.methods.getLatestPriceMATIC().call();
-            const dollarToMatic = responseMATIC / 10 ** 8;
-            const totalSecurityMatic = (securityDeposit / dollarToMatic) * 10 ** 18;
+            const dollarToMatic = responseMATIC;
+            const totalSecurityMatic = ((securityDeposit * 10 ** 26) / dollarToMatic);
 
             console.log("Matic " + totalSecurityMatic);
 
@@ -134,12 +127,13 @@ export default class DashboardCard extends Component {
                     gasPrice: web3.utils.toWei("3", 'gwei'),
                     gas: 210000,
                     value: web3.utils.toWei(totalSecurityMatic.toString(), 'wei')
-                })
-                .on("confirmation", this.initiateSuperfluid);
+                });
 
-            console.log(response);
-            console.log(this.state);
-            this.setState({ transactionMessage: `Success! \n  TxHash:${response.transactionHash}` });
+            // console.log(response);
+            // console.log(this.state);
+            this.setState({ transactionMessage: `Success! \n  Deposit-TxHash:${response.transactionHash} \n` });
+            await this.initiateSuperfluid();
+
         } catch (error) {
             this.setState({ transactionMessage: `Failed!` });
             console.error(error);
@@ -153,9 +147,8 @@ export default class DashboardCard extends Component {
     convertDollarToDAI = async (dollarAmt) => {
         const { contract } = this.state;
         const responseDAI = await contract.methods.getLatestPriceDAI().call();
-        const dollarToDAI = responseDAI / 10 ** 8;
-        const DAI = dollarAmt / dollarToDAI;
-        return DAI * 10 ** 18 / (3600 * 24 * 30);
+        const DAI = (dollarAmt * 10 ** 8) / responseDAI;
+        return (DAI * 10 ** 18) / (3600 * 24 * 30);
     }
 
     componentDidMount() {
