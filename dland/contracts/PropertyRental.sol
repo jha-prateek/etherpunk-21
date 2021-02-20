@@ -57,7 +57,7 @@ contract PropertyRental {
 
     // mapping of bookingId to Booking object
     mapping(uint256 => Booking) public bookings;
-    mapping(bookingId => uint256) depositedSecurity;
+    mapping(uint256 => uint256) depositedSecurity;
     // This event is emitted when a new property is put up for rent
     event NewProperty(uint256 indexed propertyId);
 
