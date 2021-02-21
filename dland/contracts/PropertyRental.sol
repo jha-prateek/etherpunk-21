@@ -110,19 +110,16 @@ contract PropertyRental {
         uint128 checkoutDate
     ) public payable {
         // Retrieve `property` object from the storage
-        Property storage property = properties[_propertyId];
+        Property memory property = properties[_propertyId];
 
         // Assert that property is active
-        require(
-            property.isActive == true,
-            "property with this ID is not active"
-        );
+        require(property.isActive == true,"property with this ID is not active");
+
         // Assert that property not booked
-        require(
-            property.isBooked == false,
-            "property with this ID is not available"
-        );
+        require(property.isBooked == false,"property with this ID is not available");
+
         uint256 ethDeposit = convertUSDToEth(property.securityDeposit);
+
         // Check the customer has sent an amount equal to (rentPerDay * numberOfDays)
         require(msg.value >= ethDeposit, "Sent insufficient funds");
 
@@ -146,12 +143,9 @@ contract PropertyRental {
             msg.sender
         );
 
-        // Retrieve `property` object from the storage
-        Property storage property = properties[_propertyId];
-
         // Mark the property booked
-        property.isBooked = true;
-        property.isActive = false;
+        properties[_propertyId].isBooked = true;
+        properties[_propertyId].isActive = false;
         propertyToBooking[_propertyId] = bookingId;
 
         // Emit an event to notify clients
@@ -203,8 +197,7 @@ contract PropertyRental {
         uint8 j = 0;
         for (uint256 i = loc; j < 8 && i < propertyId; i++) {
             if (properties[i].isActive) {
-                Property storage prop = properties[i];
-                propertyBundle[j++] = prop;
+                propertyBundle[j++] = properties[i];
             }
         }
         return (propertyBundle, j);
@@ -226,7 +219,7 @@ contract PropertyRental {
         uint256 k = 0;
         for (uint256 i = loc; j < 2 && i < propertyId; i++) {
             if (properties[i].owner == caller) {
-                Property storage prop = properties[i];
+                Property memory prop = properties[i];
                 propertyBundle[j] = prop;
                 k = propertyToBooking[prop.propId];
                 bookingBundle[j++] = bookings[k];
@@ -258,7 +251,7 @@ contract PropertyRental {
         uint8 j = 0;
         for (uint256 i = loc; j < 2 && i < propertyId; i++) {
             if (bookings[i].tenant == caller) {
-                Booking storage booked = bookings[i];
+                Booking memory booked = bookings[i];
                 bookingBundle[j] = booked;
                 propertyBundle[j++] = properties[booked.propertyId];
             }
@@ -304,13 +297,16 @@ contract PropertyRental {
     // }
 
     // to cancel a booking and initiate security refund
-    function cancelBooking(uint256 _booking) public payable{
-        Booking memory booked = bookings[_booking];
-        Property memory prop = properties[booked.propertyId];
+    function cancelBooking(uint256 _propId) public payable{
+        Property memory prop = properties[_propId];
 
         //Validate only property owner can cancel booking
         require(prop.owner == msg.sender,"THIS IS NOT YOUR PROPERTY");
-        require(prop.isBooked, "The property is not booked");
+        require(prop.isBooked == true, "The property is not booked");
+
+        //load the booking
+        uint256 _booking = propertyToBooking[_propId];
+        Booking memory booked = bookings[_booking];
 
         uint256 ethDeposit = convertUSDToEth(prop.securityDeposit);
         // Check the customer has sent an amount equal to security deposit
@@ -325,14 +321,13 @@ contract PropertyRental {
 
     function _cancelBooking(uint256 _booking) internal{
         Booking memory booked = bookings[_booking];
-        Property memory prop = properties[booked.propertyId];
         //mark booking cancelled
-        prop.isActive = true;
-        prop.isBooked = false;
-        booked.checkInDate = 0;
-        booked.checkoutDate = 0;
-        booked.tenant = address(0);
-        booked.propertyId = 0;
-        propertyToBooking[prop.propId] = 0;
+        properties[booked.propertyId].isActive = true;
+        properties[booked.propertyId].isBooked = false;
+        propertyToBooking[booked.propertyId] = 0;
+        bookings[_booking].checkInDate = 0;
+        bookings[_booking].checkoutDate = 0;
+        bookings[_booking].tenant = address(0);
+        bookings[_booking].propertyId = 0;
     }
 }
