@@ -115,7 +115,8 @@ export default class DashboardCard extends Component {
             // Chainlink call for converting Dollat to Matic using priceFeed
             const responseMATIC = await contract.methods.getLatestPriceMATIC().call();
             const dollarToMatic = responseMATIC;
-            const totalSecurityMatic = ((securityDeposit * 10 ** 26) / dollarToMatic);
+            const totalSecurityMaticDec = ((securityDeposit * 10 ** 26) / dollarToMatic);
+            const totalSecurityMatic = totalSecurityMaticDec.toFixed(0);
 
             console.log("Matic " + totalSecurityMatic);
 

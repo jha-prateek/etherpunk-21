@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { getFurnishing, getDateFromEpoch, getFlatType } from './Utils';
 import Modal from 'react-bootstrap/Modal';
+const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 
 export default class PropertyCard extends Component {
     constructor(props) {
@@ -24,7 +25,41 @@ export default class PropertyCard extends Component {
             transactionMessage: "",
         }
     }
+    cancelFLow = async () => {
+        const { property, account, contact } = this.state;
+        const { web3 } = this.props;
 
+        // setInterval(function () {
+        //     if (web3.eth.accounts[0] !== account) {
+        //         window.location.reload(false);
+        //     }
+        // }, 100);
+
+
+        this.setState({ showLoadingBackdrop: true });
+
+        const fDAIxTokenAddress_Rinkeby = '0x745861AeD1EEe363b4AaA5F1994Be40b1e05Ff90';
+        try {
+
+            const sf = new SuperfluidSDK.Framework({
+                web3: web3
+            });
+            await sf.initialize();
+
+            await sf.cfa.deleteFlow({
+                superToken: fDAIxTokenAddress_Rinkeby,
+                sender: property.tenant,
+                receiver: property.owner,
+                by: property.owner
+            });
+
+            this.setState({ showLoadingBackdrop: false, showSuccessBackdrop: true, transactionMessage: 'You are not paying rent anymore. Check with SuperFluid Dashboard.' });
+            // console.log(sf);
+
+        } catch (error) {
+            console.error(error);
+        }
+    }
     returnDeposit = async () => {
         const { account, contract, property } = this.state;
         const { web3 } = this.props;
@@ -40,7 +75,8 @@ export default class PropertyCard extends Component {
         try {
             const responseMATIC = await contract.methods.getLatestPriceMATIC().call();
             const dollarToMatic = responseMATIC;
-            const totalSecurityMatic = ((property.securityDeposit * 10 ** 26) / dollarToMatic);
+            const totalSecurityMaticDec = ((property.securityDeposit * 10 ** 26) / dollarToMatic);
+            const totalSecurityMatic = totalSecurityMaticDec.toFixed(0);
 
             console.log("Matic " + totalSecurityMatic);
 
@@ -52,9 +88,10 @@ export default class PropertyCard extends Component {
                     gasPrice: web3.utils.toWei("3", 'gwei'),
                     gas: 210000,
                     value: web3.utils.toWei(totalSecurityMatic.toString(), 'wei')
-                });
+                }); 
             this.setState({ transactionMessage: `Success! \n  Deposit-TxHash:${response.transactionHash} \n` });
             console.log(response);
+            this.cancelFLow();
         } catch (error) {
             this.setState({ transactionMessage: `Failed!` });
             console.error(error);
@@ -99,7 +136,7 @@ export default class PropertyCard extends Component {
                             </dl>
                         </div>
                     </div>
-                    <button onClick={this.returnDeposit} className="btn btn-primary btn-block">Return Deposit</button>
+                    <button onClick={this.returnDeposit} className="btn btn-primary btn-block">Cancel Booking</button>
                 </div>
                 <Modal
                     show={this.state.showLoadingBackdrop}
