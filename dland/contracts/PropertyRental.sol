@@ -145,7 +145,6 @@ contract PropertyRental {
 
         // Mark the property booked
         properties[_propertyId].isBooked = true;
-        properties[_propertyId].isActive = false;
         propertyToBooking[_propertyId] = bookingId;
 
         // Emit an event to notify clients
@@ -164,10 +163,8 @@ contract PropertyRental {
      * @dev Take down the property from the market
      */
     function markPropertyAsInactive(uint256 _propertyId) public {
-        require(
-            properties[_propertyId].owner == msg.sender,
-            "THIS IS NOT YOUR PROPERTY"
-        );
+        require(properties[_propertyId].owner == msg.sender,"THIS IS NOT YOUR PROPERTY");
+        require(properties[_property].isBooked == false, "The property is currently booked");
         properties[_propertyId].isActive = false;
     }
 
@@ -322,7 +319,6 @@ contract PropertyRental {
     function _cancelBooking(uint256 _booking) internal{
         Booking memory booked = bookings[_booking];
         //mark booking cancelled
-        properties[booked.propertyId].isActive = true;
         properties[booked.propertyId].isBooked = false;
         propertyToBooking[booked.propertyId] = 0;
         bookings[_booking].checkInDate = 0;
