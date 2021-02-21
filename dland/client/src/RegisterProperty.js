@@ -29,6 +29,29 @@ export default class RegisterProperty extends Component {
         }
     }
 
+    setInitialState = () => {
+
+        this.setState({
+            flatType: "",
+            furnishing: "",
+            area: "",
+            address: "",
+            availableFrom: "",
+            rent: "",
+            deposit: "",
+            selectedFiles: [],
+            selectedFilesIPFSPath: [],
+            fileHashString: "",
+            ownerContact: "",
+            ipfsClient: this.props.ipfsClient,
+            contract: this.props.contract,
+            account: this.props.account,
+            loadingBackdropTitle: "Saving File...",
+            showLoadingBackdrop: false,
+            showSuccessBackdrop: true,
+        });
+    }
+
     componentDidMount() {
 
     }
@@ -126,12 +149,8 @@ export default class RegisterProperty extends Component {
     saveContract = async () => {
         const { account, contract, address, availableFrom, area, flatType, furnishing, deposit, rent, ownerContact, selectedFilesIPFSPath } = this.state;
         const date = new Date(availableFrom).getTime();
+        console.log(date);
         const { web3 } = this.props;
-        // setInterval(function () {
-        //     if (web3.eth.accounts[0] !== account) {
-        //         window.location.reload(false);
-        //     }
-        // }, 100);
 
         try {
             const response = await contract.methods.rentOutproperty(
@@ -150,10 +169,8 @@ export default class RegisterProperty extends Component {
             this.setState({ transactionMessage: `Failed!` });
             console.error(error);
         }
-        this.setState({
-            showLoadingBackdrop: false,
-            showSuccessBackdrop: true
-        });
+
+        this.setInitialState();
     }
 
     render() {

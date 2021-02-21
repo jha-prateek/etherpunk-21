@@ -142,3 +142,7 @@
 .modal-body {
   word-wrap: break-word;
 }
+
+.text-dark {
+  color: white;
+}

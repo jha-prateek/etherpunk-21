@@ -9,7 +9,8 @@ export default class MyProperties extends Component {
         this.state = {
             contract: this.props.contract,
             account: this.props.account,
-            myProperties: []
+            myProperties: [],
+            bookings: []
         }
     }
 
@@ -17,11 +18,8 @@ export default class MyProperties extends Component {
 
         const { account, contract } = this.state;
         try {
-            const response = await contract.methods.getMyProperties(0, account).call();
-            const properties = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
-            const bookings = response[1].filter(item => item.tenant !== "0x0000000000000000000000000000000000000000");
-            const mergedResult = [properties, bookings].reduce((a, b) => a.map((c, i) => Object.assign({}, c, b[i])));
-            console.log(mergedResult);
+            const response = await contract.methods.getMyProperties(2, account).call();
+            const mergedResult = [response[0], response[1]].reduce((a, b) => a.map((c, i) => Object.assign({}, c, b[i])));
             this.setState({ myProperties: mergedResult });
 
         } catch (error) {

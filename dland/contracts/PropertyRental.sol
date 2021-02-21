@@ -23,6 +23,11 @@ contract PropertyRental {
         priceFeedDAIUSD = AggregatorV3Interface(
             0x2bA49Aaa16E6afD2a993473cfB70Fa8559B523cF
         );
+
+        rentOutproperty("Address1;9087654321", 1200, 1, 1614556800000, 1, 1, 1, "");
+        rentOutproperty("Address2;9087654321", 1200, 1, 1614556800000, 2, 2, 1, "");
+        rentOutproperty("Address3;9087654321", 1200, 1, 1614556800000, 3, 3, 1, "");
+
     }
 
     // Property to be rented out on Property
@@ -58,7 +63,7 @@ contract PropertyRental {
     // mapping of bookingId to Booking object
     mapping(uint256 => Booking) public bookings;
     mapping(uint256 => uint256) propertyToBooking;
-    
+
     // This event is emitted when a new property is put up for rent
     event NewProperty(uint256 indexed propertyId);
 
@@ -113,10 +118,16 @@ contract PropertyRental {
         Property memory property = properties[_propertyId];
 
         // Assert that property is active
-        require(property.isActive == true,"property with this ID is not active");
+        require(
+            property.isActive == true,
+            "property with this ID is not active"
+        );
 
         // Assert that property not booked
-        require(property.isBooked == false,"property with this ID is not available");
+        require(
+            property.isBooked == false,
+            "property with this ID is not available"
+        );
 
         uint256 ethDeposit = convertUSDToEth(property.securityDeposit);
 
@@ -163,8 +174,14 @@ contract PropertyRental {
      * @dev Take down the property from the market
      */
     function markPropertyAsInactive(uint256 _propertyId) public {
-        require(properties[_propertyId].owner == msg.sender,"THIS IS NOT YOUR PROPERTY");
-        require(properties[_property].isBooked == false, "The property is currently booked");
+        require(
+            properties[_propertyId].owner == msg.sender,
+            "THIS IS NOT YOUR PROPERTY"
+        );
+        require(
+            properties[_propertyId].isBooked == false,
+            "The property is currently booked"
+        );
         properties[_propertyId].isActive = false;
     }
 
@@ -193,7 +210,7 @@ contract PropertyRental {
         Property[] memory propertyBundle = new Property[](8);
         uint8 j = 0;
         for (uint256 i = loc; j < 8 && i < propertyId; i++) {
-            if (properties[i].isActive) {
+            if (properties[i].isActive && !properties[i].isBooked) {
                 propertyBundle[j++] = properties[i];
             }
         }
@@ -286,7 +303,7 @@ contract PropertyRental {
     // Function to convert amounts in USD to ETH
     function convertUSDToEth(uint256 _value) public view returns (uint256) {
         int256 ethUsdPrice = getLatestPriceMATIC();
-        return (_value*10 ** 26) /uint256(ethUsdPrice);
+        return (_value * 10**26) / uint256(ethUsdPrice);
     }
 
     // function getDepositedETH(uint256 _bookedId) public view returns (uint256){
@@ -294,11 +311,11 @@ contract PropertyRental {
     // }
 
     // to cancel a booking and initiate security refund
-    function cancelBooking(uint256 _propId) public payable{
+    function cancelBooking(uint256 _propId) public payable {
         Property memory prop = properties[_propId];
 
         //Validate only property owner can cancel booking
-        require(prop.owner == msg.sender,"THIS IS NOT YOUR PROPERTY");
+        require(prop.owner == msg.sender, "THIS IS NOT YOUR PROPERTY");
         require(prop.isBooked == true, "The property is not booked");
 
         //load the booking
@@ -316,7 +333,7 @@ contract PropertyRental {
         _cancelBooking(_booking);
     }
 
-    function _cancelBooking(uint256 _booking) internal{
+    function _cancelBooking(uint256 _booking) internal {
         Booking memory booked = bookings[_booking];
         //mark booking cancelled
         properties[booked.propertyId].isBooked = false;

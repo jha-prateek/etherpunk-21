@@ -20,19 +20,6 @@ export class Dashboard extends Component {
         console.log(response);
         this.setState({ allProperties: data });
 
-        //const response1 = await contract.methods.convertUSDToEth(1).call();
-        //console.log(response1);
-        //const responseDeposit = await contract.methods.getDepositedETH(0).call();
-        //console.log(" Dep"+ responseDeposit);
-        // const dollar = 100;
-        // const responseDAI = await contract.methods.getLatestPriceDAI().call();
-        // const dollarToDAI = responseDAI / 10 ** 8;
-        // const DAI = dollar / dollarToDAI;
-        // const DAIPerSecond = DAI * 10 ** 18 / (3600 * 24 * 30);
-
-        // console.log(DAI);
-        // console.log(DAIPerSecond);
-
     }
 
     componentDidMount() {

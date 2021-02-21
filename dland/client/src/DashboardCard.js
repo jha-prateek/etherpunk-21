@@ -17,6 +17,7 @@ export default class DashboardCard extends Component {
         const securityDeposit = this.props.propertyDetail['securityDeposit'];
         const imageURL = this.props.propertyDetail['imagesHash'].split(',')[0];
         const propertyId = this.props.propertyDetail['propId'];
+
         this.state = {
             area: area,
             availableFrom: getDateFromEpoch(availableFrom),
@@ -24,6 +25,7 @@ export default class DashboardCard extends Component {
             furnishing: getFurnishing(furnishing),
             rent: rent,
             securityDeposit: securityDeposit,
+            securityDepositETH: 0,
             address: description[0],
             contact: description[1],
             imageURL: imageURL,
@@ -59,7 +61,7 @@ export default class DashboardCard extends Component {
                 superToken: fDAIxTokenAddress_Rinkeby,
                 sender: account,
                 receiver: owner,
-                flowRate: Math.round(DAIPerSecond)
+                flowRate: DAIPerSecond.toFixed(0)
             });
 
             console.log(sf);
@@ -78,15 +80,16 @@ export default class DashboardCard extends Component {
         });
     }
 
+    getETHAmount = async (securityDeposit, contract) => {
+        const responseMATIC = await contract.methods.getLatestPriceMATIC().call();
+        const dollarToMatic = responseMATIC;
+        const totalSecurityMaticDec = ((securityDeposit * 10 ** 26) / dollarToMatic);
+        return totalSecurityMaticDec.toFixed(0);
+    }
+
     rentProperty = async () => {
         const { account, contract, propertyId, checkInDate, checkOutDate, availableFrom, securityDeposit } = this.state;
         const { web3 } = this.props;
-
-        // setInterval(function () {
-        //     if (web3.eth.accounts[0] !== account) {
-        //         window.location.reload(false);
-        //     }
-        // }, 100);
 
         if (checkInDate === "" || checkOutDate === "" || checkInDate > checkOutDate) {
             alert("Check-out date must be after Check-in date");
@@ -95,12 +98,14 @@ export default class DashboardCard extends Component {
 
         const checkInDateEpoch = new Date(checkInDate).getTime();
         const checkOutDateEpoch = new Date(checkOutDate).getTime();
+        const availableFromEpoch = new Date(availableFrom).getTime();
 
-        if (checkInDate < availableFrom - 1) {
+        if (checkInDateEpoch < availableFromEpoch - 1) {
             alert("Check-in date must be after Available date");
             return;
         }
 
+        console.log(availableFromEpoch, checkInDateEpoch, checkOutDateEpoch);
         this.setState({ bookProperty: false, showLoadingBackdrop: true });
 
         try {
@@ -112,14 +117,7 @@ export default class DashboardCard extends Component {
             //         console.error(error);
             //     });
 
-            // Chainlink call for converting Dollat to Matic using priceFeed
-            const responseMATIC = await contract.methods.getLatestPriceMATIC().call();
-            const dollarToMatic = responseMATIC;
-            const totalSecurityMaticDec = ((securityDeposit * 10 ** 26) / dollarToMatic);
-            const totalSecurityMatic = totalSecurityMaticDec.toFixed(0);
-
-            console.log("Matic " + totalSecurityMatic);
-
+            const securityDepositETHCurrent = await this.getETHAmount(securityDeposit, this.props.contract);
             // Sending security amount to owner
             const response = await contract.methods.rentProperty(
                 propertyId, checkInDateEpoch, checkOutDateEpoch
@@ -128,7 +126,7 @@ export default class DashboardCard extends Component {
                     from: account,
                     gasPrice: web3.utils.toWei("3", 'gwei'),
                     gas: 210000,
-                    value: web3.utils.toWei(totalSecurityMatic.toString(), 'wei')
+                    value: web3.utils.toWei(securityDepositETHCurrent.toString(), 'wei')
                 });
 
             // console.log(response);
@@ -146,6 +144,7 @@ export default class DashboardCard extends Component {
         });
     }
 
+    // Chainlink call for converting Dollat to Matic using priceFeed
     convertDollarToDAI = async (dollarAmt) => {
         const { contract } = this.state;
         const responseDAI = await contract.methods.getLatestPriceDAI().call();
@@ -153,8 +152,17 @@ export default class DashboardCard extends Component {
         return (DAI * 10 ** 18) / (3600 * 24 * 30);
     }
 
+    bookPropertyHandle = async () => {
+        let securityDepositETH = await this.getETHAmount(this.state.securityDeposit, this.props.contract);
+        this.setState({ bookProperty: true, securityDepositETH: securityDepositETH });
+        // console.log(this.state);
+    }
+
+    refreshPage = () => {
+        window.location.reload();
+    }
+
     componentDidMount() {
-        // this.initiateSuperfluid();
     }
 
     render() {
@@ -193,7 +201,7 @@ export default class DashboardCard extends Component {
                                 <br />
                                 <p>
                                     <button className="btn btn-primary btn-block"
-                                        onClick={() => this.setState({ bookProperty: true })}
+                                        onClick={this.bookPropertyHandle}
                                     > Details </button>
                                 </p>
                                 <p>
@@ -230,6 +238,11 @@ export default class DashboardCard extends Component {
                                 />
                             </div>
                         </div>
+                        <div className="form-row">
+                            <div className="col">
+                                <h3><span className="badge bg-info">ETH {this.state.securityDepositETH / 10 ** 18} + Gas Fee</span></h3>
+                            </div>
+                        </div>
                     </Modal.Body>
                     <Modal.Footer>
                         <Button variant="secondary" onClick={() => this.setState({ bookProperty: false })}>
@@ -262,7 +275,7 @@ export default class DashboardCard extends Component {
 
                 <Modal
                     show={this.state.showSuccessBackdrop}
-                    onHide={() => this.setState({ showSuccessBackdrop: false })}
+                    onHide={this.refreshPage}
                     centered
                 >
                     <Modal.Header closeButton>
