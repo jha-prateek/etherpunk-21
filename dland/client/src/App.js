@@ -56,6 +56,10 @@ class App extends Component {
         // , this.runExample
       );
 
+      window.ethereum.on('accountsChanged', (accounts) => {
+        window.location.reload();
+      })
+
     } catch (error) {
       // Catch any errors for any of the above operations.
       alert(
@@ -95,13 +99,13 @@ class App extends Component {
             (props) => <Dashboard {...props} contract={this.state.contract} account={this.state.accounts[0]} web3={this.state.web3} />
           } />
           <Route path="/property" exact render={
-            (props) => <Register {...props} contract={this.state.contract} account={this.state.accounts[0]} />
+            (props) => <Register {...props} contract={this.state.contract} account={this.state.accounts[0]} web3={this.state.web3} />
           } />
           <Route path="/bookings" exact render={
             (props) => <MyBookings {...props} contract={this.state.contract} account={this.state.accounts[0]} web3={this.state.web3} />
           } />
           <Route path="/properties" exact render={
-            (props) => <MyProperties {...props} contract={this.state.contract} account={this.state.accounts[0]} />
+            (props) => <MyProperties {...props} contract={this.state.contract} account={this.state.accounts[0]} web3={this.state.web3} />
           } />
         </Router>
       </div>

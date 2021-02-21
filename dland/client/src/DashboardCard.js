@@ -36,6 +36,7 @@ export default class DashboardCard extends Component {
             checkInDate: "",
             checkOutDate: "",
             transactionMessage: "",
+            loadingMessage: "Booking..."
         }
 
         // console.log(propertyId, this.props.contract, this.props.account);
@@ -65,13 +66,6 @@ export default class DashboardCard extends Component {
 
             this.setState({ transactionMessage: `${this.state.transactionMessage} \n Your superfluid flow has started. Check https://superfluid.finance/` });
 
-            // await sf.cfa.deleteFlow({
-            //     superToken: fDAIxTokenAddress_Rinkeby,
-            //     sender: account,
-            //     receiver: owner,
-            //     by: account
-            // });
-
             const flowDeductions = (await sf.cfa.getNetFlow({ superToken: fDAIxTokenAddress_Rinkeby, account: account })).toString();
             console.log(flowDeductions);
 
@@ -86,12 +80,19 @@ export default class DashboardCard extends Component {
 
     rentProperty = async () => {
         const { account, contract, propertyId, checkInDate, checkOutDate, availableFrom, securityDeposit } = this.state;
+        const { web3 } = this.props;
+
+        // setInterval(function () {
+        //     if (web3.eth.accounts[0] !== account) {
+        //         window.location.reload(false);
+        //     }
+        // }, 100);
+
         if (checkInDate === "" || checkOutDate === "" || checkInDate > checkOutDate) {
             alert("Check-out date must be after Check-in date");
             return;
         }
 
-        const { web3 } = this.props;
         const checkInDateEpoch = new Date(checkInDate).getTime();
         const checkOutDateEpoch = new Date(checkOutDate).getTime();
 
@@ -131,7 +132,7 @@ export default class DashboardCard extends Component {
 
             // console.log(response);
             // console.log(this.state);
-            this.setState({ transactionMessage: `Success! \n  Deposit-TxHash:${response.transactionHash} \n` });
+            this.setState({ transactionMessage: `Success! \n  Deposit-TxHash:${response.transactionHash} \n`, loadingMessage: 'Innitiating Superfluid Rent flow.' });
             await this.initiateSuperfluid();
 
         } catch (error) {
@@ -247,7 +248,7 @@ export default class DashboardCard extends Component {
                     centered
                 >
                     <Modal.Header closeButton>
-                        <Modal.Title>Booking...</Modal.Title>
+                        <Modal.Title>{this.state.loadingMessage}</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <div className="d-flex justify-content-center">

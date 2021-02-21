@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { getFurnishing, getDateFromEpoch, getFlatType } from './Utils';
+import Modal from 'react-bootstrap/Modal';
 
 export default class PropertyCard extends Component {
     constructor(props) {
@@ -15,8 +16,53 @@ export default class PropertyCard extends Component {
             address: description[0],
             startDate: getDateFromEpoch(property.checkInDate),
             endDate: getDateFromEpoch(property.checkoutDate),
-            property: property
+            property: property,
+            contract: this.props.contract,
+            account: this.props.account,
+            showLoadingBackdrop: false,
+            showSuccessBackdrop: false,
+            transactionMessage: "",
         }
+    }
+
+    returnDeposit = async () => {
+        const { account, contract, property } = this.state;
+        const { web3 } = this.props;
+
+        // setInterval(function () {
+        //     if (web3.eth.accounts[0] !== account) {
+        //         window.location.reload(false);
+        //     }
+        // }, 100);
+
+        this.setState({ bookProperty: false, showLoadingBackdrop: true });
+        // console.log(property);
+        try {
+            const responseMATIC = await contract.methods.getLatestPriceMATIC().call();
+            const dollarToMatic = responseMATIC;
+            const totalSecurityMatic = ((property.securityDeposit * 10 ** 26) / dollarToMatic);
+
+            console.log("Matic " + totalSecurityMatic);
+
+            const response = await contract.methods.cancelBooking(
+                property.propertyId
+            )
+                .send({
+                    from: property.owner,
+                    gasPrice: web3.utils.toWei("3", 'gwei'),
+                    gas: 210000,
+                    value: web3.utils.toWei(totalSecurityMatic.toString(), 'wei')
+                });
+            this.setState({ transactionMessage: `Success! \n  Deposit-TxHash:${response.transactionHash} \n` });
+            console.log(response);
+        } catch (error) {
+            this.setState({ transactionMessage: `Failed!` });
+            console.error(error);
+        }
+        this.setState({
+            showLoadingBackdrop: false,
+            showSuccessBackdrop: true
+        });
     }
 
     render() {
@@ -53,7 +99,39 @@ export default class PropertyCard extends Component {
                             </dl>
                         </div>
                     </div>
+                    <button onClick={this.returnDeposit} className="btn btn-primary btn-block">Return Deposit</button>
                 </div>
+                <Modal
+                    show={this.state.showLoadingBackdrop}
+                    backdrop="static"
+                    keyboard={false}
+                    aria-labelledby="contained-modal-title-vcenter"
+                    centered
+                >
+                    <Modal.Header closeButton>
+                        <Modal.Title>Returning Deposit...</Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        <div className="d-flex justify-content-center">
+                            <div className="spinner-grow" role="status">
+                                <span className="sr-only">Loading...</span>
+                            </div>
+                        </div>
+                    </Modal.Body>
+                </Modal>
+
+                <Modal
+                    show={this.state.showSuccessBackdrop}
+                    onHide={() => this.setState({ showSuccessBackdrop: false })}
+                    centered
+                >
+                    <Modal.Header closeButton>
+                        <Modal.Title>Message </Modal.Title>
+                    </Modal.Header>
+                    <Modal.Body>
+                        {this.state.transactionMessage}
+                    </Modal.Body>
+                </Modal>
             </div>
         )
     }

@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import Property from './PropertyCard';
+import Modal from 'react-bootstrap/Modal';
 
 export default class MyProperties extends Component {
     constructor(props) {
@@ -46,7 +47,7 @@ export default class MyProperties extends Component {
                                 {
                                     myProperties.length > 0 ?
                                         myProperties.map((item, key) => {
-                                            return <Property key={key} propertyDetail={item} />
+                                            return <Property key={key} propertyDetail={item} contract={this.state.contract} account={this.state.account} web3={this.props.web3} />
                                         })
                                         : null
                                 }

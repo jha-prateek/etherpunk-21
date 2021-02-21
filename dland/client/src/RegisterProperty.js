@@ -126,6 +126,12 @@ export default class RegisterProperty extends Component {
     saveContract = async () => {
         const { account, contract, address, availableFrom, area, flatType, furnishing, deposit, rent, ownerContact, selectedFilesIPFSPath } = this.state;
         const date = new Date(availableFrom).getTime();
+        const { web3 } = this.props;
+        // setInterval(function () {
+        //     if (web3.eth.accounts[0] !== account) {
+        //         window.location.reload(false);
+        //     }
+        // }, 100);
 
         try {
             const response = await contract.methods.rentOutproperty(

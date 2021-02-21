@@ -44,7 +44,7 @@ export default class MyBookings extends Component {
                             {
                                 myBookings.length > 0 ?
                                     myBookings.map((item, key) => {
-                                        return <Booking key={key} propertyDetail={item} web3={this.props.web3} />
+                                        return <Booking key={key} propertyDetail={item} contract={this.state.contract} account={this.state.account} web3={this.props.web3} />
                                     })
                                     : null
                             }
