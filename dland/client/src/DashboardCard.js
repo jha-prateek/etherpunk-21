@@ -182,14 +182,14 @@ export default class DashboardCard extends Component {
             });
             await sf.initialize();
 
-            // let currentBalance = (await sf.tokens.fDAIx.balanceOf.call(account)).toString() / 1e18;
+            let currentBalance = (await sf.tokens.fDAIx.balanceOf.call(account)).toString() / 1e18;
 
             // let monDif = monthDiff(getDateFromEpoch(checkoutDate), getDateFromEpoch(checkinDate));
             // console.log(monDif);
 
-            // if (currentBalance < monDif * rent) {
-            //     return false;
-            // }
+            if (currentBalance < rent) {
+                return false;
+            }
 
             this.setState({
                 sf: sf
