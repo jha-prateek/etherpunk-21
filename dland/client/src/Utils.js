@@ -33,3 +33,13 @@ exports.getDateFromEpoch = function (epoch) {
     newDate.setUTCMilliseconds(epoch);
     return newDate.toDateString();
 }
+
+exports.monthDiff = (checkOut, checkIn) => {
+    var months;
+    let d1 = new Date(checkOut);
+    let d2 = new Date(checkIn);
+    months = (d2.getFullYear() - d1.getFullYear()) * 12;
+    months -= d1.getMonth();
+    months += d2.getMonth();
+    return months <= 0 ? 0 : months;
+}

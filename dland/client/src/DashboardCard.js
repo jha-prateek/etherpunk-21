@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import Modal from 'react-bootstrap/Modal';
 import Button from 'react-bootstrap/Button';
-import { getFurnishing, getDateFromEpoch, getFlatType } from './Utils';
+import { getFurnishing, getDateFromEpoch, getFlatType, monthDiff } from './Utils';
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 
 export default class DashboardCard extends Component {
@@ -38,24 +38,20 @@ export default class DashboardCard extends Component {
             checkInDate: "",
             checkOutDate: "",
             transactionMessage: "",
-            loadingMessage: "Booking..."
+            loadingMessage: "Booking...",
+            sf: null
         }
 
-        // console.log(propertyId, this.props.contract, this.props.account);
+        // console.log(props.propertyDetail);
     }
 
     initiateSuperfluid = async () => {
-        const { account, rent } = this.state;
+        const { account, rent, sf } = this.state;
         const { owner } = this.props.propertyDetail;
 
         const fDAIxTokenAddress_Rinkeby = '0x745861AeD1EEe363b4AaA5F1994Be40b1e05Ff90';
         try {
             const DAIPerSecond = await this.convertDollarToDAI(rent);
-
-            const sf = new SuperfluidSDK.Framework({
-                web3: this.props.web3
-            });
-            await sf.initialize();
 
             await sf.cfa.createFlow({
                 superToken: fDAIxTokenAddress_Rinkeby,
@@ -105,8 +101,16 @@ export default class DashboardCard extends Component {
             return;
         }
 
-        console.log(availableFromEpoch, checkInDateEpoch, checkOutDateEpoch);
         this.setState({ bookProperty: false, showLoadingBackdrop: true });
+
+        if (!(await this.checkBalance(checkInDate, checkOutDate))) {
+            this.setState({
+                transactionMessage: `Failed, Not enough DAI Balance!`,
+            });
+            return;
+        }
+        this.setState({ loadingMessage: "Booking..." });
+        // return;
 
         try {
             // contract.methods.rentProperty.estimateGas({ from: account })
@@ -162,8 +166,42 @@ export default class DashboardCard extends Component {
         window.location.reload();
     }
 
-    componentDidMount() {
+    checkBalance = async (checkinDate, checkoutDate) => {
+        const { web3 } = this.props;
+        const { rent } = this.props.propertyDetail;
+        const { account } = this.state;
+
+        this.setState({
+            loadingMessage: "Checking DAI Balance in Superfluid Wallet"
+        });
+
+        try {
+            const sf = new SuperfluidSDK.Framework({
+                web3: this.props.web3,
+                tokens: ["fDAI"]
+            });
+            await sf.initialize();
+
+            // let currentBalance = (await sf.tokens.fDAIx.balanceOf.call(account)).toString() / 1e18;
+
+            // let monDif = monthDiff(getDateFromEpoch(checkoutDate), getDateFromEpoch(checkinDate));
+            // console.log(monDif);
+
+            // if (currentBalance < monDif * rent) {
+            //     return false;
+            // }
+
+            this.setState({
+                sf: sf
+            });
+
+            return true;
+
+        } catch (error) {
+            console.error(error);
+        }
     }
+
 
     render() {
         return (

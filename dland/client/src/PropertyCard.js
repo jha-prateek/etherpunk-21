@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { getFurnishing, getDateFromEpoch, getFlatType } from './Utils';
 import Modal from 'react-bootstrap/Modal';
+import config from './config.json';
 const SuperfluidSDK = require("@superfluid-finance/js-sdk");
 
 export default class PropertyCard extends Component {
@@ -8,10 +9,9 @@ export default class PropertyCard extends Component {
         super(props)
 
         const property = this.props.propertyDetail;
-        console.log(property);
+        // console.log(property);
         const imageURLs = property.imagesHash !== "" ? property.imagesHash.split(",") : [];
         const description = property['propertyDescription'].split(';');
-        // console.log(property.isBooked);
         this.state = {
             imageURLs: imageURLs,
             contact: description[1],
@@ -35,7 +35,7 @@ export default class PropertyCard extends Component {
 
         // this.setState({ showLoadingBackdrop: true });
 
-        const fDAIxTokenAddress_Rinkeby = '0x745861AeD1EEe363b4AaA5F1994Be40b1e05Ff90';
+        const fDAIxTokenAddress_Rinkeby = config;
         try {
 
             const sf = new SuperfluidSDK.Framework({
@@ -147,6 +147,35 @@ export default class PropertyCard extends Component {
         window.location.reload();
     }
 
+    checkData = async () => {
+        const { property } = this.state;
+        const fDAIxTokenAddress_Rinkeby = '0x745861AeD1EEe363b4AaA5F1994Be40b1e05Ff90';
+        const { web3 } = this.props;
+        const sf = new SuperfluidSDK.Framework({
+            web3: web3,
+            tokens: ["fDAI"]
+        });
+        await sf.initialize();
+        // console.log(sf.tokens);
+        let daix = sf.tokens.fDAIx;
+        console.log("***********************");
+        // console.log(await sf.cfa.listFlows({ superToken: fDAIxTokenAddress_Rinkeby, account: '0x8f231D5F3622E6c7b9c4aF00156C15AbCC3F1061' }));
+        console.log((await sf.tokens.fDAIx.balanceOf.call('0x8f231D5F3622E6c7b9c4aF00156C15AbCC3F1061')).toString() / 1e18);
+        console.log("***********************");
+        web3.eth.getPastLogs(
+            {
+                address: "0x8f231D5F3622E6c7b9c4aF00156C15AbCC3F1061",
+                fromBlock: "0x1",
+                toBlock: 'latest'
+            })
+            .then(console.log)
+            .catch(e => console.log(e));
+    }
+
+    componentDidMount() {
+        // this.checkData();
+    }
+
     render() {
         return (
             <div className="booking col-sm-6" >
@@ -160,6 +189,7 @@ export default class PropertyCard extends Component {
                             <dl className="row property-description">
                                 <dt className="col-sm-5">Booked</dt>
                                 <dd className="col-sm-5">{this.state.property.isBooked ? "Yes" : "No"}</dd>
+                                <div className="border-top" />
 
                                 <dt className="col-sm-5">Tenant Address</dt>
                                 <dd className="col-sm-5">{this.state.tenant}</dd>
@@ -182,9 +212,11 @@ export default class PropertyCard extends Component {
                         </div>
                     </div>
                     <button hidden={this.state.showCancelButton} onClick={this.returnDeposit} className="btn btn-danger">Cancel Booking</button>
-                    <br/>
+                    <br />
                     <button hidden={this.state.showActivateButton} onClick={this.activateProperty} className="btn btn-primary">Activate</button>
                     <button hidden={!this.state.showActivateButton} onClick={this.deActivateProperty} className="btn btn-danger">Deactivate</button>
+                    {/* <div dangerouslySetInnerHTML={{ __html: "<iframe src='https://app.superfluid.finance/streams/goerli/0xfc598fba68f46e8b5d7125a841f2afb9dc7863f7419fe57ca3801a955ccd0626' scrolling='no' frameborder='0' />" }} /> */}
+                    {/* <div dangerouslySetInnerHTML={{ __html: "<iframe src='https://app.superfluid.finance/streams/rinkeby/0x263d71a23f9127f3f564f1b67c58ecfc390a14edc62151a34b0e2b60b66e98fe' />"}} /> */}
                 </div>
                 <Modal
                     show={this.state.showLoadingBackdrop}

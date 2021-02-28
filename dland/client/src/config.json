@@ -1,5 +1,6 @@
 {
     "ipfsEndpoint" : "ipfs.infura.io",
     "ipfsPort": 5001,
-    "ipfsSecurityProtocol": "https"
+    "ipfsSecurityProtocol": "https",
+    "fDAIxTokenAddress_Rinkeby" : "0x745861AeD1EEe363b4AaA5F1994Be40b1e05Ff90"
 }
