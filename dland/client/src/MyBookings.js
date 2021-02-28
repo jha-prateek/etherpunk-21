@@ -16,12 +16,11 @@ export default class MyBookings extends Component {
         const { account, contract } = this.state;
         try {
             const response = await contract.methods.getMyBookings(0, account).call();
-            const properties = response[0].filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
-            const bookings = response[1].filter(item => item.tenant !== "0x0000000000000000000000000000000000000000");
-            const mergedResult = [properties, bookings].reduce((a, b) => a.map((c, i) => Object.assign({}, c, b[i])));
+            const mergedResult = [response[0], response[1]].reduce((a, b) => a.map((c, i) => Object.assign({}, c, b[i])));
+            const filteredMergedResult = mergedResult.filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
             // console.log(properties, bookings);
             // console.log(mergedResult);
-            this.setState({ myBookings: mergedResult });
+            this.setState({ myBookings: filteredMergedResult });
         } catch (error) {
             console.error(error);
         }

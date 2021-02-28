@@ -26,6 +26,7 @@ export default class PropertyCard extends Component {
             transactionMessage: "",
             showCancelButton: !property.isBooked,
             showActivateButton: property.isActive,
+            showDeactivateButton: !property.isActive,
             tenant: property.tenant !== "0x0000000000000000000000000000000000000000" ? property.tenant : ""
         }
     }
@@ -35,7 +36,7 @@ export default class PropertyCard extends Component {
 
         // this.setState({ showLoadingBackdrop: true });
 
-        const fDAIxTokenAddress_Rinkeby = config;
+        const fDAIxTokenAddress_Rinkeby = '0x745861AeD1EEe363b4AaA5F1994Be40b1e05Ff90';
         try {
 
             const sf = new SuperfluidSDK.Framework({
@@ -85,7 +86,7 @@ export default class PropertyCard extends Component {
                     value: web3.utils.toWei(totalSecurityMatic.toString(), 'wei')
                 });
             this.setState({ transactionMessage: `Success! \n  Deposit-TxHash:${response.transactionHash} \n` });
-            console.log(response);
+            //console.log(response);
             this.cancelFLow();
         } catch (error) {
             this.setState({
@@ -212,9 +213,9 @@ export default class PropertyCard extends Component {
                         </div>
                     </div>
                     <button hidden={this.state.showCancelButton} onClick={this.returnDeposit} className="btn btn-danger">Cancel Booking</button>
-                    <br />
-                    <button hidden={this.state.showActivateButton} onClick={this.activateProperty} className="btn btn-primary">Activate</button>
-                    <button hidden={!this.state.showActivateButton} onClick={this.deActivateProperty} className="btn btn-danger">Deactivate</button>
+                    {/* <br /> */}
+                    <button hidden={(this.state.showActivateButton || !this.state.showCancelButton)} onClick={this.activateProperty} className="btn btn-primary">Activate</button>
+                    <button hidden={(this.state.showDeactivateButton || !this.state.showCancelButton)} onClick={this.deActivateProperty} className="btn btn-danger">Deactivate</button>
                     {/* <div dangerouslySetInnerHTML={{ __html: "<iframe src='https://app.superfluid.finance/streams/goerli/0xfc598fba68f46e8b5d7125a841f2afb9dc7863f7419fe57ca3801a955ccd0626' scrolling='no' frameborder='0' />" }} /> */}
                     {/* <div dangerouslySetInnerHTML={{ __html: "<iframe src='https://app.superfluid.finance/streams/rinkeby/0x263d71a23f9127f3f564f1b67c58ecfc390a14edc62151a34b0e2b60b66e98fe' />"}} /> */}
                 </div>
@@ -226,7 +227,7 @@ export default class PropertyCard extends Component {
                     centered
                 >
                     <Modal.Header closeButton>
-                        <Modal.Title>Returning Deposit...</Modal.Title>
+                        <Modal.Title>Updating Property Details</Modal.Title>
                     </Modal.Header>
                     <Modal.Body>
                         <div className="d-flex justify-content-center">

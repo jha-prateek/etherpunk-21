@@ -60,12 +60,12 @@ export default class DashboardCard extends Component {
                 flowRate: DAIPerSecond.toFixed(0)
             });
 
-            console.log(sf);
+            //console.log(sf);
 
             this.setState({ transactionMessage: `${this.state.transactionMessage} \n Your superfluid flow has started. Check https://superfluid.finance/` });
 
             const flowDeductions = (await sf.cfa.getNetFlow({ superToken: fDAIxTokenAddress_Rinkeby, account: account })).toString();
-            console.log(flowDeductions);
+            //console.log(flowDeductions);
 
         } catch (error) {
             console.error(error);
@@ -135,7 +135,7 @@ export default class DashboardCard extends Component {
 
             // console.log(response);
             // console.log(this.state);
-            this.setState({ transactionMessage: `Success! \n  Deposit-TxHash:${response.transactionHash} \n`, loadingMessage: 'Innitiating Superfluid Rent flow.' });
+            this.setState({ transactionMessage: `Success! \n  Deposit-TxHash:${response.transactionHash} \n`, loadingMessage: 'Initiating Superfluid Rent flow.' });
             await this.initiateSuperfluid();
 
         } catch (error) {

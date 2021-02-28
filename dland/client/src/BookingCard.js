@@ -24,7 +24,7 @@ export default class BookingCard extends Component {
     }
 
     render() {
-        console.log(this.state.imageURLs);
+        //console.log(this.state.imageURLs);
         return (
             <div className="booking w-100 p-2" style={{ textAlign: '-webkit-center' }}>
                 <div className="card" style={{ width: '60%' }}>

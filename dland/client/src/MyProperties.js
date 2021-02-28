@@ -18,9 +18,10 @@ export default class MyProperties extends Component {
 
         const { account, contract } = this.state;
         try {
-            const response = await contract.methods.getMyProperties(2, account).call();
+            const response = await contract.methods.getMyProperties(0, account).call();
             const mergedResult = [response[0], response[1]].reduce((a, b) => a.map((c, i) => Object.assign({}, c, b[i])));
-            this.setState({ myProperties: mergedResult });
+            const filteredMergedResult = mergedResult.filter(item => item.owner !== "0x0000000000000000000000000000000000000000");
+            this.setState({ myProperties: filteredMergedResult });
 
         } catch (error) {
             console.error(error);
